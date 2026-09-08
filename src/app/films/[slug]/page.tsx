@@ -36,7 +36,10 @@ export default async function FilmDetailPage({ params }: { params: Promise<{ slu
   const film = await getFilmPublicBySlug(slug);
   if (!film) notFound();
 
-  const embedUrl = film.trailerUrl ? toYouTubeEmbed(film.trailerUrl) : null;
+  const embeddedVideos = film.videos
+    .map((v) => ({ ...v, embedUrl: toYouTubeEmbed(v.videoUrl) }))
+    .filter((v): v is typeof v & { embedUrl: string } => !!v.embedUrl);
+  const primaryEmbed = embeddedVideos[0]?.embedUrl || null;
 
   return (
     <div className="bg-dark-950">
@@ -48,7 +51,9 @@ export default async function FilmDetailPage({ params }: { params: Promise<{ slu
           genre: film.genre,
           ...(film.year ? { dateCreated: film.year } : {}),
           inLanguage: film.language,
-          ...(embedUrl ? { trailer: { "@type": "VideoObject", name: `${film.title} — Watch Film`, embedUrl } } : {}),
+          ...(primaryEmbed
+            ? { trailer: { "@type": "VideoObject", name: `${film.title} — Watch Film`, embedUrl: primaryEmbed } }
+            : {}),
         }}
       />
 
@@ -97,22 +102,29 @@ export default async function FilmDetailPage({ params }: { params: Promise<{ slu
               <p className="font-inter text-[15px] leading-relaxed text-muted mt-6 max-w-xl">{film.synopsis}</p>
             )}
 
-            {embedUrl && (
-              <div className="mt-10 max-w-xl">
-                <div className="relative aspect-video w-full bg-dark-900 border border-dark-800">
-                  <iframe
-                    src={embedUrl}
-                    title={`${film.title} — Watch Film`}
-                    className="absolute inset-0 h-full w-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    loading="lazy"
-                  />
-                </div>
+            {embeddedVideos.length > 0 && (
+              <div className="mt-10 max-w-xl space-y-8">
+                {embeddedVideos.map((v) => (
+                  <div key={v.id}>
+                    {v.title && (
+                      <p className="font-inter text-[11px] tracking-[0.1em] uppercase text-muted mb-2">{v.title}</p>
+                    )}
+                    <div className="relative aspect-video w-full bg-dark-900 border border-dark-800">
+                      <iframe
+                        src={v.embedUrl}
+                        title={v.title ? `${film.title} — ${v.title}` : `${film.title} — Watch Film`}
+                        className="absolute inset-0 h-full w-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        loading="lazy"
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
 
-            {!embedUrl && !film.synopsis && (
+            {embeddedVideos.length === 0 && !film.synopsis && (
               <p className="font-inter text-[12px] tracking-[0.1em] uppercase text-muted/60 mt-8">
                 Further details on this project available on request.
               </p>
@@ -120,6 +132,26 @@ export default async function FilmDetailPage({ params }: { params: Promise<{ slu
           </Reveal>
         </div>
       </section>
+
+      {film.gallery.length > 0 && (
+        <section className="border-b border-dark-800">
+          <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-16 lg:py-20">
+            <Reveal>
+              <p className="font-inter text-[11px] tracking-[0.16em] uppercase text-bronze mb-8">Gallery</p>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {film.gallery.map((img) => (
+                  <div key={img.id}>
+                    <div className="relative aspect-[4/3] w-full bg-dark-800 border border-dark-800">
+                      <Image src={img.imageUrl} alt={img.caption || `${film.title} — still`} fill sizes="(min-width: 1024px) 33vw, 90vw" className="object-cover" />
+                    </div>
+                    {img.caption && <p className="font-inter text-[12px] text-muted mt-2">{img.caption}</p>}
+                  </div>
+                ))}
+              </div>
+            </Reveal>
+          </div>
+        </section>
+      )}
 
       <CTASection
         eyebrow="Collaboration"

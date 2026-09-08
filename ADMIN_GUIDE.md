@@ -57,8 +57,14 @@ against accidentally locking yourself out).
 - **Status**: `DRAFT` (never public) → `PUBLISHED` → `ARCHIVED` (removed
   from the public site, kept in the database).
 - **Featured** (see below) — a checkbox plus an order number.
-- **Poster image**: a path/URL, same pattern as book covers — no upload UI
-  yet.
+- **Card image**: a single path/URL shown on Films-page and homepage
+  cards — same pattern as book covers, no upload UI yet.
+- **Gallery**: any number of additional images (stills/BTS) for the
+  detail page only, each with an optional caption. Add/remove freely.
+- **Videos**: any number of YouTube links (trailer plus any additional
+  clips), each with an optional title — all embedded on the detail page.
+  Editing a film replaces its gallery/video lists wholesale, same as book
+  variants.
 
 ## Featured System
 

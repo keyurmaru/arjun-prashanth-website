@@ -65,7 +65,9 @@ CREATE TABLE IF NOT EXISTS films (
   year VARCHAR(20) NULL,
   credits TEXT NOT NULL,
   synopsis TEXT NULL,
-  trailer_url VARCHAR(300) NULL,
+  -- The single image shown on film cards / listing grids. Additional
+  -- stills/BTS photos live in film_gallery; additional clips beyond a
+  -- primary trailer live in film_videos.
   poster_url VARCHAR(300) NULL,
   status ENUM('DRAFT', 'PUBLISHED', 'ARCHIVED') NOT NULL DEFAULT 'DRAFT',
   featured TINYINT(1) NOT NULL DEFAULT 0,
@@ -75,6 +77,24 @@ CREATE TABLE IF NOT EXISTS films (
   seo_description VARCHAR(300) NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS film_gallery (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  film_id INT NOT NULL,
+  image_url VARCHAR(300) NOT NULL,
+  caption VARCHAR(200) NULL,
+  sort_order INT NOT NULL DEFAULT 0,
+  FOREIGN KEY (film_id) REFERENCES films(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS film_videos (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  film_id INT NOT NULL,
+  video_url VARCHAR(300) NOT NULL,
+  title VARCHAR(200) NULL,
+  sort_order INT NOT NULL DEFAULT 0,
+  FOREIGN KEY (film_id) REFERENCES films(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS orders (

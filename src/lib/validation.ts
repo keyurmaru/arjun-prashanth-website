@@ -145,8 +145,23 @@ export const filmInputSchema = z.object({
   year: z.string().trim().max(20).optional().or(z.literal("")),
   credits: z.string().trim().min(1).max(1000),
   synopsis: z.string().trim().max(2000).optional().or(z.literal("")),
-  trailerUrl: z.string().trim().max(300).optional().or(z.literal("")),
   posterUrl: z.string().trim().max(300).optional().or(z.literal("")),
+  gallery: z
+    .array(
+      z.object({
+        imageUrl: z.string().trim().min(1).max(300),
+        caption: z.string().trim().max(200).optional().or(z.literal("")),
+      }),
+    )
+    .max(50),
+  videos: z
+    .array(
+      z.object({
+        videoUrl: z.string().trim().min(1).max(300),
+        title: z.string().trim().max(200).optional().or(z.literal("")),
+      }),
+    )
+    .max(20),
   status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]),
   featured: z.boolean(),
   featuredOrder: z.number().int().min(0),

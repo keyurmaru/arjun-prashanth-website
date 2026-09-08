@@ -135,11 +135,11 @@ for (const film of films) {
     continue;
   }
 
-  await pool.execute(
+  const [result] = await pool.execute(
     `INSERT INTO films
-      (slug, title, project_type, official_role, genre, language, year, credits, synopsis, trailer_url,
+      (slug, title, project_type, official_role, genre, language, year, credits, synopsis,
        status, featured, featured_order, sort_order)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PUBLISHED', ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'PUBLISHED', ?, ?, ?)`,
     [
       film.slug,
       film.title,
@@ -150,12 +150,18 @@ for (const film of films) {
       film.year,
       film.credits,
       film.synopsis,
-      film.trailerUrl,
       film.featured ? 1 : 0,
       film.featuredOrder,
       film.sortOrder,
     ],
   );
+
+  if (film.trailerUrl) {
+    await pool.execute(`INSERT INTO film_videos (film_id, title, video_url, sort_order) VALUES (?, 'Trailer', ?, 0)`, [
+      result.insertId,
+      film.trailerUrl,
+    ]);
+  }
   console.log(`Inserted "${film.slug}".`);
 }
 

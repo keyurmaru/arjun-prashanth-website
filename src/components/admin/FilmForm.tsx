@@ -7,9 +7,24 @@ import type { FilmRecord, ProjectType, FilmStatus } from "@/lib/filmsRepo";
 const PROJECT_TYPES: ProjectType[] = ["Feature Film", "Short Film", "Direction", "Associate Direction", "Assistant Direction", "Editing"];
 const STATUSES: FilmStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED"];
 
+interface GalleryDraft {
+  imageUrl: string;
+  caption: string;
+}
+interface VideoDraft {
+  videoUrl: string;
+  title: string;
+}
+
 export default function FilmForm({ film }: { film?: FilmRecord }) {
   const router = useRouter();
   const [featured, setFeatured] = useState(film?.featured ?? false);
+  const [gallery, setGallery] = useState<GalleryDraft[]>(
+    film?.gallery.map((g) => ({ imageUrl: g.imageUrl, caption: g.caption || "" })) || [],
+  );
+  const [videos, setVideos] = useState<VideoDraft[]>(
+    film?.videos.map((v) => ({ videoUrl: v.videoUrl, title: v.title || "" })) || [],
+  );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,8 +44,9 @@ export default function FilmForm({ film }: { film?: FilmRecord }) {
       year: String(formData.get("year") || ""),
       credits: String(formData.get("credits") || ""),
       synopsis: String(formData.get("synopsis") || ""),
-      trailerUrl: String(formData.get("trailerUrl") || ""),
       posterUrl: String(formData.get("posterUrl") || ""),
+      gallery: gallery.filter((g) => g.imageUrl.trim()),
+      videos: videos.filter((v) => v.videoUrl.trim()),
       status: String(formData.get("status") || "DRAFT"),
       featured,
       featuredOrder: Number(formData.get("featuredOrder") || 0),
@@ -126,10 +142,59 @@ export default function FilmForm({ film }: { film?: FilmRecord }) {
         />
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-4">
-        <Field label="Poster image URL" name="posterUrl" defaultValue={film?.posterUrl || undefined} placeholder="/images/films/example.jpeg" />
-        <Field label="Trailer URL (YouTube)" name="trailerUrl" defaultValue={film?.trailerUrl || undefined} />
-      </div>
+      <Field label="Card image URL (shown on Films/homepage cards)" name="posterUrl" defaultValue={film?.posterUrl || undefined} placeholder="/images/films/example.jpeg" />
+
+      <ListEditor
+        title="Gallery (additional images/stills/BTS for the detail page)"
+        items={gallery}
+        onChange={setGallery}
+        addLabel="+ Add image"
+        renderRow={(item, update) => (
+          <>
+            <input
+              type="text"
+              value={item.imageUrl}
+              onChange={(e) => update({ ...item, imageUrl: e.target.value })}
+              placeholder="/images/films/still-1.jpeg"
+              className="flex-1 border border-black/20 px-2 py-1.5 text-[13px] outline-none focus:border-black"
+            />
+            <input
+              type="text"
+              value={item.caption}
+              onChange={(e) => update({ ...item, caption: e.target.value })}
+              placeholder="Caption (optional)"
+              className="w-40 border border-black/20 px-2 py-1.5 text-[13px] outline-none focus:border-black"
+            />
+          </>
+        )}
+        empty={() => ({ imageUrl: "", caption: "" })}
+      />
+
+      <ListEditor
+        title="Videos (trailer + any additional clips)"
+        items={videos}
+        onChange={setVideos}
+        addLabel="+ Add video"
+        renderRow={(item, update) => (
+          <>
+            <input
+              type="text"
+              value={item.videoUrl}
+              onChange={(e) => update({ ...item, videoUrl: e.target.value })}
+              placeholder="https://www.youtube.com/watch?v=..."
+              className="flex-1 border border-black/20 px-2 py-1.5 text-[13px] outline-none focus:border-black"
+            />
+            <input
+              type="text"
+              value={item.title}
+              onChange={(e) => update({ ...item, title: e.target.value })}
+              placeholder="Title (optional, e.g. Trailer)"
+              className="w-40 border border-black/20 px-2 py-1.5 text-[13px] outline-none focus:border-black"
+            />
+          </>
+        )}
+        empty={() => ({ videoUrl: "", title: "" })}
+      />
 
       <div>
         <label className="block text-[12px] text-black/60 mb-1" htmlFor="status">
@@ -182,6 +247,52 @@ export default function FilmForm({ film }: { film?: FilmRecord }) {
         {submitting ? "Saving…" : film ? "Save Changes" : "Create Film"}
       </button>
     </form>
+  );
+}
+
+function ListEditor<T>({
+  title,
+  items,
+  onChange,
+  renderRow,
+  addLabel,
+  empty,
+}: {
+  title: string;
+  items: T[];
+  onChange: (items: T[]) => void;
+  renderRow: (item: T, update: (next: T) => void) => React.ReactNode;
+  addLabel: string;
+  empty: () => T;
+}) {
+  return (
+    <div className="border border-black/10 p-4">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-[12px] tracking-[0.08em] uppercase text-black/50">{title}</p>
+        <button
+          type="button"
+          onClick={() => onChange([...items, empty()])}
+          className="text-[12px] text-black/60 hover:text-black underline"
+        >
+          {addLabel}
+        </button>
+      </div>
+      <div className="space-y-2">
+        {items.map((item, i) => (
+          <div key={i} className="flex gap-2 items-center">
+            {renderRow(item, (next) => onChange(items.map((it, j) => (j === i ? next : it))))}
+            <button
+              type="button"
+              onClick={() => onChange(items.filter((_, j) => j !== i))}
+              className="text-[12px] text-red-600 shrink-0"
+            >
+              Remove
+            </button>
+          </div>
+        ))}
+        {items.length === 0 && <p className="text-[12px] text-black/40">None added.</p>}
+      </div>
+    </div>
   );
 }
 
