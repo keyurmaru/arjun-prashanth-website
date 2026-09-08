@@ -9,7 +9,7 @@ import { buildMetadata } from "@/lib/seo";
 
 const title = "Films";
 const description =
-  "Film credits of Arjun Prashanth Rao across Telugu and Hindi cinema, from assistant direction to associate direction and his directorial debut short, Vidhatri.";
+  "Film credits of Arjun Prashanth across Telugu and Hindi cinema, from assistant direction to associate direction and his directorial debut short, VIDHATRI.";
 
 export const metadata: Metadata = buildMetadata({ title, description, path: "/films" });
 

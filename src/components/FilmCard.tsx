@@ -19,7 +19,7 @@ export default function FilmCard({ film }: { film: Film }) {
         <p className="font-cormorant text-xl text-ivory-100 group-hover:text-bronze-light transition-colors">{film.title}</p>
         <p className="font-inter text-[11px] tracking-[0.08em] uppercase text-muted mt-1">{film.role}</p>
         <p className="font-inter text-[11px] text-muted/80 mt-1">
-          {[film.year, film.language].filter(Boolean).join(" · ")}
+          {[film.year, film.language, film.genre].filter(Boolean).join(" · ")}
         </p>
       </div>
     </Link>

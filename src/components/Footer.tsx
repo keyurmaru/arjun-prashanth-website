@@ -75,7 +75,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-14 pt-8 border-t border-dark-800 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-          <p className="font-inter text-[11px] text-muted">© {new Date().getFullYear()} Arjun Prashanth Rao. All Rights Reserved.</p>
+          <p className="font-inter text-[11px] text-muted">© {new Date().getFullYear()} Arjun Prashanth. All Rights Reserved.</p>
           <nav aria-label="Legal" className="flex flex-wrap gap-x-6 gap-y-2">
             {footerLegalNav.map((l) => (
               <Link key={l.href} href={l.href} className="font-inter text-[11px] text-muted hover:text-ivory-100 transition-colors">

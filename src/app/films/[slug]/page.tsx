@@ -41,6 +41,7 @@ export default async function FilmDetailPage({ params }: { params: Promise<{ slu
           "@context": "https://schema.org",
           "@type": "Movie",
           name: film.title,
+          genre: film.genre,
           ...(film.year ? { dateCreated: film.year } : {}),
           inLanguage: film.language,
           ...(embedUrl ? { trailer: { "@type": "VideoObject", name: `${film.title} — Watch Film`, embedUrl } } : {}),
@@ -71,7 +72,7 @@ export default async function FilmDetailPage({ params }: { params: Promise<{ slu
             </h1>
             <p className="font-inter text-[12px] tracking-[0.1em] uppercase text-bronze mt-4">{film.role}</p>
             <p className="font-inter text-[13px] text-muted mt-2">
-              {[film.year ?? "Year details on request", film.language].filter(Boolean).join(" · ")}
+              {[film.year ?? "Year details on request", film.language, film.genre].filter(Boolean).join(" · ")}
             </p>
             <p className="font-inter text-[15px] leading-relaxed text-muted mt-8 max-w-xl">{film.credits}</p>
 

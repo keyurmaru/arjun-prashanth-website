@@ -75,7 +75,7 @@ export default function CheckoutPageClient() {
         key: data.keyId,
         amount: data.amountPaise,
         currency: "INR",
-        name: "Arjun Prashanth Rao",
+        name: "Arjun Prashanth",
         description: "Book order",
         order_id: data.razorpayOrderId,
         prefill: { name: address.name, email: address.email, contact: address.phone },

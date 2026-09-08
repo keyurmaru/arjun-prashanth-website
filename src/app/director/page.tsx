@@ -12,7 +12,7 @@ import { buildMetadata, siteUrl } from "@/lib/seo";
 
 const title = "Director";
 const description =
-  "Arjun Prashanth Rao — Film Director. Direction rooted in the emotional and psychological truth of a scene, built across Telugu and Hindi cinema.";
+  "Arjun Prashanth — Film Director. Direction rooted in the emotional and psychological truth of a scene, built across Telugu and Hindi cinema.";
 
 export const metadata: Metadata = buildMetadata({ title, description, path: "/director" });
 

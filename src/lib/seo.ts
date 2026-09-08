@@ -28,7 +28,7 @@ export function buildMetadata(opts: {
       title: opts.title,
       description: opts.description,
       url,
-      siteName: "Arjun Prashanth Rao",
+      siteName: "Arjun Prashanth",
       images: opts.image ? [{ url: opts.image }] : undefined,
       type: "website",
     },

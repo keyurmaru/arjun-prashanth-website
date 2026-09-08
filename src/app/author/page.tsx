@@ -11,7 +11,7 @@ import { site } from "@/content/site";
 import { buildMetadata } from "@/lib/seo";
 
 const title = "Author";
-const description = "Arjun Prashanth Rao — Author. Stories that stay long after the last page.";
+const description = "Arjun Prashanth — Author. Stories that stay long after the last page.";
 
 export const metadata: Metadata = buildMetadata({ title, description, path: "/author" });
 

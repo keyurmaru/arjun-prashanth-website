@@ -45,7 +45,7 @@ export default async function HomePage() {
         <div className="absolute inset-0 z-0">
           <Image
             src="/images/gallery/photo-50.jpeg"
-            alt="Arjun Prashanth Rao on set"
+            alt="Arjun Prashanth on set"
             fill
             priority
             sizes="100vw"
@@ -69,7 +69,7 @@ export default async function HomePage() {
             >
               Arjun
               <br />
-              Prashanth Rao
+              Prashanth
             </h1>
           </Reveal>
           <Reveal delay={160}>

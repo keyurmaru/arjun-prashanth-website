@@ -5,7 +5,7 @@ import CTASection from "@/components/CTASection";
 import { buildMetadata } from "@/lib/seo";
 
 const title = "Press";
-const description = "Press coverage, interviews and features on Arjun Prashanth Rao.";
+const description = "Press coverage, interviews and features on Arjun Prashanth.";
 
 export const metadata: Metadata = buildMetadata({ title, description, path: "/press" });
 

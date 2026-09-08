@@ -6,7 +6,7 @@ export interface GalleryImage {
 }
 
 // Real, unedited production photography supplied directly by Arjun
-// Prashanth Rao — not stock imagery, not AI-generated. Dimensions are the
+// Prashanth — not stock imagery, not AI-generated. Dimensions are the
 // actual source pixel sizes (read from each file) so the masonry grid and
 // next/image both reflect each photo's real, varied aspect ratio instead of
 // a guessed/fixed one.

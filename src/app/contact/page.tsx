@@ -7,7 +7,7 @@ import { site } from "@/content/site";
 import { buildMetadata } from "@/lib/seo";
 
 const title = "Contact";
-const description = "Contact Arjun Prashanth Rao for film, screenwriting, editing, publishing, media or collaboration enquiries.";
+const description = "Contact Arjun Prashanth for film, screenwriting, editing, publishing, media or collaboration enquiries.";
 
 export const metadata: Metadata = buildMetadata({ title, description, path: "/contact" });
 

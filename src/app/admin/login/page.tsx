@@ -36,7 +36,7 @@ export default function AdminLoginPage() {
   return (
     <div className="min-h-screen bg-[#F5F5F3] text-[#1A1A1A] flex items-center justify-center px-4">
       <form onSubmit={handleSubmit} className="w-full max-w-sm bg-white border border-black/10 p-8">
-        <p className="text-[11px] tracking-[0.14em] uppercase text-black/40 mb-1">Arjun Prashanth Rao</p>
+        <p className="text-[11px] tracking-[0.14em] uppercase text-black/40 mb-1">Arjun Prashanth</p>
         <h1 className="text-xl font-medium mb-6">Admin Login</h1>
 
         <label className="block text-[12px] text-black/60 mb-1" htmlFor="email">

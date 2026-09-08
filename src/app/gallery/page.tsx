@@ -7,7 +7,7 @@ import { galleryImages } from "@/content/gallery";
 import { buildMetadata } from "@/lib/seo";
 
 const title = "Gallery";
-const description = "Behind-the-scenes photography from Arjun Prashanth Rao's work in film.";
+const description = "Behind-the-scenes photography from Arjun Prashanth's work in film.";
 
 export const metadata: Metadata = buildMetadata({ title, description, path: "/gallery" });
 

@@ -1,4 +1,4 @@
-# Arjun Prashanth Rao — Next.js site
+# Arjun Prashanth — Next.js site
 
 Next.js 16 (App Router) + TypeScript + Tailwind CSS v4. This is the real
 production/staging source for arjunprashanth.com, deployed via Hostinger's

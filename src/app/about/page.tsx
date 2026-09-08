@@ -9,7 +9,7 @@ import { buildMetadata } from "@/lib/seo";
 
 const title = "About";
 const description =
-  "Arjun Prashanth Rao is a film director, screenwriter and author whose work is rooted in character, emotional conflict and cinematic storytelling.";
+  "Arjun Prashanth is a film director, screenwriter and author whose work is rooted in character, emotional conflict and cinematic storytelling.";
 
 export const metadata: Metadata = buildMetadata({ title, description, path: "/about" });
 

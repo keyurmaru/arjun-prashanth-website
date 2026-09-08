@@ -7,7 +7,7 @@ import { buildMetadata } from "@/lib/seo";
 
 const title = "Editing";
 const description =
-  "Arjun Prashanth Rao's editing practice — a craft built alongside direction, screenwriting and visual storytelling.";
+  "Arjun Prashanth's editing practice — a craft built alongside direction, screenwriting and visual storytelling.";
 
 export const metadata: Metadata = buildMetadata({ title, description, path: "/editing" });
 

@@ -1,6 +1,6 @@
 export const site = {
-  name: "Arjun Prashanth Rao",
-  title: "Arjun Prashanth Rao",
+  name: "Arjun Prashanth",
+  title: "Arjun Prashanth",
   role: "Film Director | Screenwriter | Editor | Author",
   tagline: "Stories that stay beyond the final frame and the last page.",
   // Verified, currently live on arjunprashanth.com — do not change without

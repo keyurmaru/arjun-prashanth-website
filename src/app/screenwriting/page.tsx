@@ -4,11 +4,12 @@ import SectionHeading from "@/components/SectionHeading";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ScreenwritingForm from "@/components/ScreenwritingForm";
 import { screenwritingAreas } from "@/content/site";
+import { screenwritingProjects } from "@/content/screenwriting";
 import { buildMetadata } from "@/lib/seo";
 
 const title = "Screenwriting";
 const description =
-  "Screenwriting by Arjun Prashanth Rao — feature-film screenplays and story development across crime, thriller, courtroom drama and emotionally driven commercial cinema.";
+  "Screenwriting by Arjun Prashanth — feature-film screenplays and story development across crime, thriller, courtroom drama and emotionally driven commercial cinema.";
 
 export const metadata: Metadata = buildMetadata({ title, description, path: "/screenwriting" });
 
@@ -55,12 +56,33 @@ export default function ScreenwritingPage() {
       <section className="border-b border-dark-800">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-20 lg:py-28">
           <Reveal>
+            <SectionHeading eyebrow="In Development" title="Selected Screenwriting Projects" />
+          </Reveal>
+          <div className="grid sm:grid-cols-2 gap-8 mt-12">
+            {screenwritingProjects.map((project, i) => (
+              <Reveal key={project.title} delay={100 + i * 40}>
+                <div className="border-l-2 border-bronze/40 pl-6 py-1">
+                  <p className="font-cormorant text-2xl text-ivory-100">{project.title}</p>
+                  <p className="font-inter text-[11px] tracking-[0.08em] uppercase text-bronze mt-1">{project.genre}</p>
+                  <p className="font-inter text-[14px] leading-relaxed text-muted mt-3">{project.logline}</p>
+                  <p className="font-inter text-[10px] tracking-[0.1em] uppercase text-muted/60 mt-3">{project.status}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b border-dark-800">
+        <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-20 lg:py-28">
+          <Reveal>
             <p className="font-inter text-[11px] tracking-[0.1em] uppercase text-muted mb-4">A Note on Confidentiality</p>
             <p className="font-inter text-[15px] leading-relaxed text-muted max-w-2xl">
-              Screenplay titles, loglines, treatments and manuscripts developed by Arjun are confidential and not
-              published publicly. Selected screenwriting projects are discussed privately with qualified production
-              partners. Please do not submit a complete screenplay through the enquiry form below — a short concept
-              is enough to begin a conversation.
+              The titles and loglines above are public-safe summaries only. Full treatments, twists, casting,
+              budgets and manuscripts are confidential and discussed privately with qualified production partners.
+              Additional projects in development remain private until formally announced. Please do not submit a
+              complete screenplay through the enquiry form below — a short concept is enough to begin a
+              conversation.
             </p>
           </Reveal>
         </div>
