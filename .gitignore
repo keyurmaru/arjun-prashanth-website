@@ -14,3 +14,7 @@ npm-debug.log*
 _legacy-vite-scaffold/
 Images_videos/
 .figma/
+
+# Local-dev fallback for MEDIA_STORAGE_DIR — production uses a path outside
+# this repo entirely (see .env.example).
+/media-storage/

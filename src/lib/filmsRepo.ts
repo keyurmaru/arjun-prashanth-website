@@ -15,6 +15,8 @@ export interface FilmVideo {
   id: number;
   videoUrl: string;
   title: string | null;
+  videoType: string;
+  posterUrl: string | null;
   sortOrder: number;
 }
 
@@ -66,7 +68,14 @@ async function hydrateFilm(row: RowDataPacket): Promise<FilmRecord> {
     synopsis: row.synopsis,
     posterUrl: row.poster_url,
     gallery: galleryRows.map((g) => ({ id: g.id, imageUrl: g.image_url, caption: g.caption, sortOrder: g.sort_order })),
-    videos: videoRows.map((v) => ({ id: v.id, videoUrl: v.video_url, title: v.title, sortOrder: v.sort_order })),
+    videos: videoRows.map((v) => ({
+      id: v.id,
+      videoUrl: v.video_url,
+      title: v.title,
+      videoType: v.video_type || "Trailer",
+      posterUrl: v.poster_url,
+      sortOrder: v.sort_order,
+    })),
     status: row.status,
     featured: !!row.featured,
     featuredOrder: row.featured_order,
@@ -139,7 +148,7 @@ export interface FilmInput {
   synopsis?: string;
   posterUrl?: string;
   gallery: { imageUrl: string; caption?: string }[];
-  videos: { videoUrl: string; title?: string }[];
+  videos: { videoUrl: string; title?: string; videoType?: string; posterUrl?: string }[];
   status: FilmStatus;
   featured: boolean;
   featuredOrder: number;
@@ -160,8 +169,8 @@ async function replaceGalleryAndVideos(conn: PoolConnection, filmId: number, inp
   }
   for (const [i, vid] of input.videos.entries()) {
     await conn.execute(
-      `INSERT INTO film_videos (film_id, video_url, title, sort_order) VALUES (?, ?, ?, ?)`,
-      [filmId, vid.videoUrl, vid.title || null, i],
+      `INSERT INTO film_videos (film_id, video_url, title, video_type, poster_url, sort_order) VALUES (?, ?, ?, ?, ?, ?)`,
+      [filmId, vid.videoUrl, vid.title || null, vid.videoType || "Trailer", vid.posterUrl || null, i],
     );
   }
 }

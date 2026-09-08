@@ -56,6 +56,7 @@ export const SESSION_MAX_AGE = SESSION_TTL_SECONDS;
 export const ROLE_ACCESS: Record<string, AdminRole[]> = {
   books: ["SUPER_ADMIN", "CONTENT_MANAGER"],
   films: ["SUPER_ADMIN", "CONTENT_MANAGER"],
+  media: ["SUPER_ADMIN", "CONTENT_MANAGER"],
   orders_write: ["SUPER_ADMIN", "ORDER_MANAGER"],
   orders_read: ["SUPER_ADMIN", "ORDER_MANAGER", "VIEWER"],
   users: ["SUPER_ADMIN"],

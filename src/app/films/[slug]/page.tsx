@@ -26,9 +26,19 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   });
 }
 
-function toYouTubeEmbed(url: string): string | null {
-  const match = url.match(/(?:v=|youtu\.be\/)([\w-]{11})/);
-  return match ? `https://www.youtube-nocookie.com/embed/${match[1]}` : null;
+type PlayableVideo = { kind: "iframe"; embedUrl: string } | { kind: "file"; fileUrl: string };
+
+function resolvePlayable(url: string): PlayableVideo | null {
+  const youtube = url.match(/(?:v=|youtu\.be\/)([\w-]{11})/);
+  if (youtube) return { kind: "iframe", embedUrl: `https://www.youtube-nocookie.com/embed/${youtube[1]}` };
+
+  const vimeo = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  if (vimeo) return { kind: "iframe", embedUrl: `https://player.vimeo.com/video/${vimeo[1]}` };
+
+  // Directly-uploaded video, served from the persistent media store.
+  if (url.startsWith("/media-files/")) return { kind: "file", fileUrl: url };
+
+  return null;
 }
 
 export default async function FilmDetailPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -37,9 +47,11 @@ export default async function FilmDetailPage({ params }: { params: Promise<{ slu
   if (!film) notFound();
 
   const embeddedVideos = film.videos
-    .map((v) => ({ ...v, embedUrl: toYouTubeEmbed(v.videoUrl) }))
-    .filter((v): v is typeof v & { embedUrl: string } => !!v.embedUrl);
-  const primaryEmbed = embeddedVideos[0]?.embedUrl || null;
+    .map((v) => ({ ...v, playable: resolvePlayable(v.videoUrl) }))
+    .filter((v): v is typeof v & { playable: PlayableVideo } => !!v.playable);
+  const primaryEmbed = embeddedVideos.find((v) => v.playable.kind === "iframe")?.playable as
+    | { kind: "iframe"; embedUrl: string }
+    | undefined;
 
   return (
     <div className="bg-dark-950">
@@ -52,7 +64,7 @@ export default async function FilmDetailPage({ params }: { params: Promise<{ slu
           ...(film.year ? { dateCreated: film.year } : {}),
           inLanguage: film.language,
           ...(primaryEmbed
-            ? { trailer: { "@type": "VideoObject", name: `${film.title} — Watch Film`, embedUrl: primaryEmbed } }
+            ? { trailer: { "@type": "VideoObject", name: `${film.title} — Watch Film`, embedUrl: primaryEmbed.embedUrl } }
             : {}),
         }}
       />
@@ -110,14 +122,24 @@ export default async function FilmDetailPage({ params }: { params: Promise<{ slu
                       <p className="font-inter text-[11px] tracking-[0.1em] uppercase text-muted mb-2">{v.title}</p>
                     )}
                     <div className="relative aspect-video w-full bg-dark-900 border border-dark-800">
-                      <iframe
-                        src={v.embedUrl}
-                        title={v.title ? `${film.title} — ${v.title}` : `${film.title} — Watch Film`}
-                        className="absolute inset-0 h-full w-full"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        loading="lazy"
-                      />
+                      {v.playable.kind === "iframe" ? (
+                        <iframe
+                          src={v.playable.embedUrl}
+                          title={v.title ? `${film.title} — ${v.title}` : `${film.title} — Watch Film`}
+                          className="absolute inset-0 h-full w-full"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          loading="lazy"
+                        />
+                      ) : (
+                        <video
+                          src={v.playable.fileUrl}
+                          poster={v.posterUrl || undefined}
+                          controls
+                          preload="metadata"
+                          className="absolute inset-0 h-full w-full object-contain bg-black"
+                        />
+                      )}
                     </div>
                   </div>
                 ))}

@@ -1,11 +1,11 @@
 # Admin Panel Guide
 
 Covers what's actually built: authentication + RBAC, the Films and Books
-CMS (with a Featured system), and Order management. Editing, screenwriting,
-press, gallery, homepage sections, navigation, and SEO settings are **not**
-in this admin panel yet — they're still plain content files under
-`src/content/` and `src/app/`, edited by a developer. See "What's not in
-this pass" at the bottom.
+CMS (with a Featured system), a central Media Library, and Order
+management. Editing, screenwriting, press, gallery, homepage sections,
+navigation, and SEO settings are **not** in this admin panel yet — they're
+still plain content files under `src/content/` and `src/app/`, edited by a
+developer. See "What's not in this pass" at the bottom.
 
 ## Logging in
 
@@ -28,12 +28,12 @@ ever get locked out.
 
 ## Roles
 
-| Role | Films | Books | Orders | Users | Settings |
-|---|---|---|---|---|---|
-| `SUPER_ADMIN` | full | full | full | full | full |
-| `CONTENT_MANAGER` | full | full | — | — | — |
-| `ORDER_MANAGER` | — | — | full | — | — |
-| `VIEWER` | — | — | read-only | — | — |
+| Role | Films | Books | Media | Orders | Users | Settings |
+|---|---|---|---|---|---|---|
+| `SUPER_ADMIN` | full | full | full | full | full | full |
+| `CONTENT_MANAGER` | full | full | full | — | — | — |
+| `ORDER_MANAGER` | — | — | — | full | — | — |
+| `VIEWER` | — | — | — | read-only | — | — |
 
 Enforced in `src/middleware.ts` (route-level) and again inside the order
 PATCH handler (`src/app/api/admin/orders/[id]/route.ts`) since `VIEWER` can
@@ -57,14 +57,19 @@ against accidentally locking yourself out).
 - **Status**: `DRAFT` (never public) → `PUBLISHED` → `ARCHIVED` (removed
   from the public site, kept in the database).
 - **Featured** (see below) — a checkbox plus an order number.
-- **Card image**: a single path/URL shown on Films-page and homepage
-  cards — same pattern as book covers, no upload UI yet.
+- **Card image**: a single image shown on Films-page and homepage cards —
+  click "Select / Upload" to drag-and-drop a file or pick one already in
+  the Media Library (see below). A raw path/URL still works if you'd
+  rather paste one.
 - **Gallery**: any number of additional images (stills/BTS) for the
   detail page only, each with an optional caption. Add/remove freely.
-- **Videos**: any number of YouTube links (trailer plus any additional
-  clips), each with an optional title — all embedded on the detail page.
-  Editing a film replaces its gallery/video lists wholesale, same as book
-  variants.
+- **Videos**: any number of clips (Trailer/Teaser/Showreel/Behind the
+  Scenes/Interview/Official Video/Clip), each with an optional title. For
+  the URL, either paste a YouTube or Vimeo link, or click "Upload" to
+  upload an MP4/WebM file directly (stored in the Media Library, played
+  back with a plain HTML5 `<video>` tag rather than embedded) — optionally
+  set a poster image for it too. Editing a film replaces its gallery/video
+  lists wholesale, same as book variants.
 
 ## Featured System
 
@@ -84,6 +89,49 @@ This same `featured` / `featured_order` pattern is meant to extend to
 Editing, Screenwriting, Press, and Gallery once those become CMS-backed —
 not built for them yet (see "What's not in this pass").
 
+## Media Library
+
+`/admin/media` — every uploaded image and video in one place, reusable
+across Films and Books rather than re-uploading the same asset per record.
+
+- **Upload**: drag-and-drop or click to select, one or many files at once.
+  Each file uploads and shows its own progress/status independently, so
+  one failure (wrong format, too large) never blocks the rest of the
+  batch — failed files show a **Retry** button. Supported: JPEG, PNG, GIF,
+  WebP (up to 15MB), and MP4/WebM (up to 300MB). The real file bytes are
+  sniffed server-side to confirm the type — a renamed `.exe` claiming to
+  be a `.jpg` is rejected regardless of its filename.
+- **Search & filter**: by filename, title, alt text, caption, tag, or
+  project; filter by type (image/video) or status.
+- **Click any item** to open its detail panel: title, alt text (for
+  accessibility — write what's actually shown, not keyword-stuffed),
+  caption, description, SEO title/description, keywords, credit, rights
+  owner/status, category, project, tags, featured flag, and status
+  (Draft/Approved/Archived). Save without leaving the panel.
+- **Used In**: the detail panel lists every film/book card image, gallery
+  entry, or video/poster currently pointing at that file, computed live
+  from the content tables (not a separately-maintained index) — so you can
+  see before deleting whether something depends on it.
+- **Delete**: blocked with a "used in N places" warning if anything still
+  references the file; confirming again forces the delete anyway. Prefer
+  setting status to **Archived** over deleting when in doubt — archived
+  media is hidden from the picker used in Film/Book forms but stays in the
+  library and on disk.
+- **Select multiple → Bulk edit**: apply a shared category/project/
+  tags/rights status/status across a selected batch in one action — alt
+  text and other per-item fields still have to be set individually, since
+  they're meant to describe one specific image.
+- Every Film/Book form field that used to be a plain image-URL text box
+  (card image, gallery rows, cover, video URL/poster) now opens this same
+  upload-or-pick control instead — pasting a raw path/URL still works if
+  you already have one.
+- **Optimization**: uploaded images are automatically served as resized
+  WebP derivatives on the public site (via Next.js's built-in image
+  optimizer) — you don't need to pre-resize anything before uploading.
+  There's no server-side video transcoding (this host has no ffmpeg
+  installed), so upload web-ready MP4/H.264 files directly; large/exotic
+  formats should be converted before uploading.
+
 ## Books
 
 `/admin/books` — list, create, edit. Each book has:
@@ -102,9 +150,10 @@ not built for them yet (see "What's not in this pass").
   checkbox + textarea + a spelling-confirmation checkbox before the buyer
   can add it to cart; the message travels through cart → checkout → the
   order record → both confirmation emails, and appears in `/admin/orders`.
-- **Cover image**: a path/URL, e.g. `/images/books/my-book.jpeg` (upload
-  the file to `public/images/books/` yourself and reference it — there's
-  no media upload UI yet, see limitations below).
+- **Cover image**: click "Select / Upload" to upload a file or pick one
+  from the Media Library — a raw path/URL still works if you paste one.
+- **Gallery**: any number of additional images (mockups, alternate covers)
+  shown on the book's detail page, each with an optional caption.
 
 Archiving a book (the "Archive" action, not a hard delete) sets its status
 to `ARCHIVED`; it disappears from `/books` and `/books/[slug]` immediately
@@ -178,10 +227,10 @@ without ever displaying them.
 
 ## What's not in this pass
 
-Films + Books are now full CMS with a Featured system; everything else
-described in the original requirements docs is still scoped for later
-passes. Still on plain content files, not database-backed or
-admin-editable:
+Films + Books are now full CMS with a Featured system, and there's a
+central Media Library; everything else described in the original
+requirements docs is still scoped for later passes. Still on plain content
+files, not database-backed or admin-editable:
 
 - Editing, screenwriting, author page copy, press, gallery, homepage
   section configuration (enable/disable, headings, item limits — the
@@ -191,15 +240,32 @@ admin-editable:
   `getPublishedBooksPublic`) Books' publish status — Books don't have an
   explicit `featured` flag yet, they all show on `/books`.
 - Per-record SEO fields exist for Films (`seoTitle`/`seoDescription`) but
-  not yet Books; no SEO health dashboard, image-SEO metadata, redirect
-  management, or social-preview UI anywhere.
-- A media upload library — cover images are pasted as a path/URL today.
+  not yet Books; no SEO health dashboard, redirect management, or
+  social-preview UI anywhere (the Media Library does have per-image SEO
+  title/description/keywords fields).
 - Content workflow (scheduled publishing) — books only have the status
   enum above, no "publish at a future date" scheduling.
-- Audit log UI — actions are recorded in the `audit_log` table
-  (`src/lib/auditLog.ts`) but there's no admin page to browse it yet.
+- Audit log UI — actions (including every upload/edit/delete in the Media
+  Library) are recorded in the `audit_log` table (`src/lib/auditLog.ts`)
+  but there's no admin page to browse it yet.
 - Serviceability/rate check at checkout (`checkServiceability` exists in
   `src/lib/shiprocket.ts` but isn't called from the checkout flow —
   shipping is a flat rate today, see `src/app/api/orders/create/route.ts`).
 - Courier selection — `Assign AWB` lets Shiprocket pick the courier; there's
   no UI to choose a specific one from `checkServiceability`'s results.
+- Media Library extras deliberately left out as optional per the spec:
+  AI-suggested alt text/title/keywords (never auto-published even where
+  it exists elsewhere), a focal-point/crop selector, AVIF derivatives
+  (WebP only for now), drag-to-reorder in the picker grid (remove + re-add
+  reorders instead), and resumable/chunked upload for very large video
+  files (a single upload request handles up to 300MB, which is generous
+  for a personal site — true resumable upload would only matter well
+  beyond that).
+- No server-side video transcoding/poster-frame extraction — this
+  shared-hosting account has no ffmpeg installed. Uploaded video is stored
+  and served exactly as uploaded, so it should already be web-ready
+  MP4/H.264; a poster image can be set manually per video.
+- The Media Library's "Used In" list is computed live by searching the
+  content tables for the file's URL, not a maintained relational index —
+  correct and sufficient at this library's size, but would be worth
+  revisiting if the library grows very large.

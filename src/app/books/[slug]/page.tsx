@@ -109,6 +109,26 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
           </Reveal>
         </div>
       </section>
+
+      {book.gallery.length > 0 && (
+        <section className="border-t border-near-black/10">
+          <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-16 lg:py-20">
+            <Reveal>
+              <p className="font-inter text-[11px] tracking-[0.16em] uppercase text-bronze mb-8">Gallery</p>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {book.gallery.map((img) => (
+                  <div key={img.id}>
+                    <div className="relative aspect-[4/3] w-full bg-near-black/5 border border-near-black/10">
+                      <Image src={img.imageUrl} alt={img.caption || `${book.title} — mockup`} fill sizes="(min-width: 1024px) 33vw, 90vw" className="object-cover" />
+                    </div>
+                    {img.caption && <p className="font-inter text-[12px] text-near-black/60 mt-2">{img.caption}</p>}
+                  </div>
+                ))}
+              </div>
+            </Reveal>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

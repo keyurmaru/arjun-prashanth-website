@@ -116,6 +116,15 @@ export const bookInputSchema = z.object({
   genre: z.string().trim().min(1).max(100),
   status: z.enum(["DRAFT", "COMING_SOON", "PRE_ORDER", "PUBLISHED", "OUT_OF_STOCK", "ARCHIVED"]),
   cover: z.string().trim().min(1).max(300),
+  gallery: z
+    .array(
+      z.object({
+        imageUrl: z.string().trim().min(1).max(300),
+        caption: z.string().trim().max(200).optional().or(z.literal("")),
+      }),
+    )
+    .max(50)
+    .optional(),
   excerpt: z.string().trim().min(1).max(1000),
   description: z.array(z.string().trim().min(1)).min(1),
   discover: z.array(z.string().trim().min(1)).optional(),
@@ -159,6 +168,10 @@ export const filmInputSchema = z.object({
       z.object({
         videoUrl: z.string().trim().min(1).max(300),
         title: z.string().trim().max(200).optional().or(z.literal("")),
+        videoType: z
+          .enum(["Trailer", "Teaser", "Showreel", "Behind the Scenes", "Interview", "Official Video", "Clip"])
+          .optional(),
+        posterUrl: z.string().trim().max(300).optional().or(z.literal("")),
       }),
     )
     .max(20),
@@ -180,3 +193,28 @@ export const adminUserInputSchema = z.object({
 });
 
 export type AdminUserInputValues = z.infer<typeof adminUserInputSchema>;
+
+export const mediaUpdateSchema = z.object({
+  title: z.string().trim().max(200).optional().or(z.literal("")),
+  altText: z.string().trim().max(300).optional().or(z.literal("")),
+  caption: z.string().trim().max(300).optional().or(z.literal("")),
+  description: z.string().trim().max(4000).optional().or(z.literal("")),
+  seoTitle: z.string().trim().max(200).optional().or(z.literal("")),
+  seoDescription: z.string().trim().max(300).optional().or(z.literal("")),
+  keywords: z.string().trim().max(300).optional().or(z.literal("")),
+  credit: z.string().trim().max(200).optional().or(z.literal("")),
+  rightsOwner: z.string().trim().max(200).optional().or(z.literal("")),
+  rightsStatus: z.enum(["NOT_VERIFIED", "APPROVED_FOR_PUBLICATION", "RESTRICTED"]).optional(),
+  category: z.string().trim().max(60).optional().or(z.literal("")),
+  projectTag: z.string().trim().max(120).optional().or(z.literal("")),
+  tags: z.string().trim().max(300).optional().or(z.literal("")),
+  featured: z.boolean().optional(),
+  featuredOrder: z.number().int().min(0).optional(),
+  status: z.enum(["DRAFT", "APPROVED", "ARCHIVED"]).optional(),
+});
+
+export type MediaUpdateValues = z.infer<typeof mediaUpdateSchema>;
+
+export const mediaBulkUpdateSchema = mediaUpdateSchema.extend({
+  ids: z.array(z.number().int()).min(1).max(200),
+});

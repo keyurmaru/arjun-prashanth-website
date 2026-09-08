@@ -3,8 +3,16 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { BookRecord, BookStatus } from "@/lib/booksRepo";
+import MediaField from "@/components/admin/media/MediaField";
+import MediaRowPicker from "@/components/admin/media/MediaRowPicker";
+import ListEditor from "@/components/admin/ListEditor";
 
 const STATUSES: BookStatus[] = ["DRAFT", "COMING_SOON", "PRE_ORDER", "PUBLISHED", "OUT_OF_STOCK", "ARCHIVED"];
+
+interface GalleryDraft {
+  imageUrl: string;
+  caption: string;
+}
 
 interface VariantDraft {
   id?: number;
@@ -40,6 +48,9 @@ function toDraftVariants(book?: BookRecord): VariantDraft[] {
 export default function BookForm({ book }: { book?: BookRecord }) {
   const router = useRouter();
   const [variants, setVariants] = useState<VariantDraft[]>(toDraftVariants(book));
+  const [gallery, setGallery] = useState<GalleryDraft[]>(
+    book?.gallery.map((g) => ({ imageUrl: g.imageUrl, caption: g.caption || "" })) || [],
+  );
   const [personalisationAvailable, setPersonalisationAvailable] = useState(book?.personalisationAvailable ?? false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -71,6 +82,7 @@ export default function BookForm({ book }: { book?: BookRecord }) {
       genre: String(formData.get("genre") || ""),
       status: String(formData.get("status") || "DRAFT"),
       cover: String(formData.get("cover") || ""),
+      gallery: gallery.filter((g) => g.imageUrl.trim()),
       excerpt: String(formData.get("excerpt") || ""),
       description: String(formData.get("description") || "")
         .split("\n")
@@ -145,7 +157,32 @@ export default function BookForm({ book }: { book?: BookRecord }) {
         </div>
       </div>
 
-      <Field label="Cover image URL *" name="cover" defaultValue={book?.cover} required placeholder="/images/books/example.jpeg" />
+      <MediaField name="cover" label="Cover image" defaultValue={book?.cover} accept="image" />
+
+      <ListEditor
+        title="Gallery (mockups / additional images for the detail page)"
+        items={gallery}
+        onChange={setGallery}
+        addLabel="+ Add image"
+        renderRow={(item, update) => (
+          <>
+            <MediaRowPicker
+              accept="image"
+              value={item.imageUrl}
+              onChange={(url) => update({ ...item, imageUrl: url })}
+              placeholder="/images/books/mockup-1.jpeg"
+            />
+            <input
+              type="text"
+              value={item.caption}
+              onChange={(e) => update({ ...item, caption: e.target.value })}
+              placeholder="Caption (optional)"
+              className="w-40 border border-black/20 px-2 py-1.5 text-[13px] outline-none focus:border-black"
+            />
+          </>
+        )}
+        empty={() => ({ imageUrl: "", caption: "" })}
+      />
 
       <div>
         <label className="block text-[12px] text-black/60 mb-1" htmlFor="excerpt">

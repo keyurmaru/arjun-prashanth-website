@@ -3,9 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { FilmRecord, ProjectType, FilmStatus } from "@/lib/filmsRepo";
+import MediaField from "@/components/admin/media/MediaField";
+import MediaRowPicker from "@/components/admin/media/MediaRowPicker";
+import ListEditor from "@/components/admin/ListEditor";
 
 const PROJECT_TYPES: ProjectType[] = ["Feature Film", "Short Film", "Direction", "Associate Direction", "Assistant Direction", "Editing"];
 const STATUSES: FilmStatus[] = ["DRAFT", "PUBLISHED", "ARCHIVED"];
+const VIDEO_TYPES = ["Trailer", "Teaser", "Showreel", "Behind the Scenes", "Interview", "Official Video", "Clip"] as const;
 
 interface GalleryDraft {
   imageUrl: string;
@@ -14,6 +18,8 @@ interface GalleryDraft {
 interface VideoDraft {
   videoUrl: string;
   title: string;
+  videoType: string;
+  posterUrl: string;
 }
 
 export default function FilmForm({ film }: { film?: FilmRecord }) {
@@ -23,7 +29,12 @@ export default function FilmForm({ film }: { film?: FilmRecord }) {
     film?.gallery.map((g) => ({ imageUrl: g.imageUrl, caption: g.caption || "" })) || [],
   );
   const [videos, setVideos] = useState<VideoDraft[]>(
-    film?.videos.map((v) => ({ videoUrl: v.videoUrl, title: v.title || "" })) || [],
+    film?.videos.map((v) => ({
+      videoUrl: v.videoUrl,
+      title: v.title || "",
+      videoType: v.videoType || "Trailer",
+      posterUrl: v.posterUrl || "",
+    })) || [],
   );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +57,9 @@ export default function FilmForm({ film }: { film?: FilmRecord }) {
       synopsis: String(formData.get("synopsis") || ""),
       posterUrl: String(formData.get("posterUrl") || ""),
       gallery: gallery.filter((g) => g.imageUrl.trim()),
-      videos: videos.filter((v) => v.videoUrl.trim()),
+      videos: videos
+        .filter((v) => v.videoUrl.trim())
+        .map((v) => ({ videoUrl: v.videoUrl, title: v.title, videoType: v.videoType, posterUrl: v.posterUrl })),
       status: String(formData.get("status") || "DRAFT"),
       featured,
       featuredOrder: Number(formData.get("featuredOrder") || 0),
@@ -142,7 +155,12 @@ export default function FilmForm({ film }: { film?: FilmRecord }) {
         />
       </div>
 
-      <Field label="Card image URL (shown on Films/homepage cards)" name="posterUrl" defaultValue={film?.posterUrl || undefined} placeholder="/images/films/example.jpeg" />
+      <MediaField
+        name="posterUrl"
+        label="Card image (shown on Films/homepage cards)"
+        defaultValue={film?.posterUrl || undefined}
+        accept="image"
+      />
 
       <ListEditor
         title="Gallery (additional images/stills/BTS for the detail page)"
@@ -151,12 +169,11 @@ export default function FilmForm({ film }: { film?: FilmRecord }) {
         addLabel="+ Add image"
         renderRow={(item, update) => (
           <>
-            <input
-              type="text"
+            <MediaRowPicker
+              accept="image"
               value={item.imageUrl}
-              onChange={(e) => update({ ...item, imageUrl: e.target.value })}
+              onChange={(url) => update({ ...item, imageUrl: url })}
               placeholder="/images/films/still-1.jpeg"
-              className="flex-1 border border-black/20 px-2 py-1.5 text-[13px] outline-none focus:border-black"
             />
             <input
               type="text"
@@ -171,29 +188,52 @@ export default function FilmForm({ film }: { film?: FilmRecord }) {
       />
 
       <ListEditor
-        title="Videos (trailer + any additional clips)"
+        title="Videos (trailer + any additional clips — paste a YouTube/Vimeo link, or upload a file directly)"
         items={videos}
         onChange={setVideos}
         addLabel="+ Add video"
         renderRow={(item, update) => (
-          <>
-            <input
-              type="text"
-              value={item.videoUrl}
-              onChange={(e) => update({ ...item, videoUrl: e.target.value })}
-              placeholder="https://www.youtube.com/watch?v=..."
-              className="flex-1 border border-black/20 px-2 py-1.5 text-[13px] outline-none focus:border-black"
-            />
-            <input
-              type="text"
-              value={item.title}
-              onChange={(e) => update({ ...item, title: e.target.value })}
-              placeholder="Title (optional, e.g. Trailer)"
-              className="w-40 border border-black/20 px-2 py-1.5 text-[13px] outline-none focus:border-black"
-            />
-          </>
+          <div className="flex flex-col gap-1.5 flex-1">
+            <div className="flex gap-2 items-center">
+              <MediaRowPicker
+                accept="video"
+                value={item.videoUrl}
+                onChange={(url) => update({ ...item, videoUrl: url })}
+                placeholder="https://www.youtube.com/watch?v=... or upload a file"
+              />
+              <select
+                value={item.videoType}
+                onChange={(e) => update({ ...item, videoType: e.target.value })}
+                className="border border-black/20 px-2 py-1.5 text-[13px] outline-none shrink-0"
+              >
+                {VIDEO_TYPES.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex gap-2 items-center">
+              <input
+                type="text"
+                value={item.title}
+                onChange={(e) => update({ ...item, title: e.target.value })}
+                placeholder="Title (optional)"
+                className="flex-1 border border-black/20 px-2 py-1.5 text-[13px] outline-none focus:border-black"
+              />
+              <div className="flex items-center gap-1.5 flex-1 text-[12px] text-black/50">
+                Poster:
+                <MediaRowPicker
+                  accept="image"
+                  value={item.posterUrl}
+                  onChange={(url) => update({ ...item, posterUrl: url })}
+                  placeholder="Optional, for uploaded videos"
+                />
+              </div>
+            </div>
+          </div>
         )}
-        empty={() => ({ videoUrl: "", title: "" })}
+        empty={() => ({ videoUrl: "", title: "", videoType: "Trailer", posterUrl: "" })}
       />
 
       <div>
@@ -247,52 +287,6 @@ export default function FilmForm({ film }: { film?: FilmRecord }) {
         {submitting ? "Saving…" : film ? "Save Changes" : "Create Film"}
       </button>
     </form>
-  );
-}
-
-function ListEditor<T>({
-  title,
-  items,
-  onChange,
-  renderRow,
-  addLabel,
-  empty,
-}: {
-  title: string;
-  items: T[];
-  onChange: (items: T[]) => void;
-  renderRow: (item: T, update: (next: T) => void) => React.ReactNode;
-  addLabel: string;
-  empty: () => T;
-}) {
-  return (
-    <div className="border border-black/10 p-4">
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-[12px] tracking-[0.08em] uppercase text-black/50">{title}</p>
-        <button
-          type="button"
-          onClick={() => onChange([...items, empty()])}
-          className="text-[12px] text-black/60 hover:text-black underline"
-        >
-          {addLabel}
-        </button>
-      </div>
-      <div className="space-y-2">
-        {items.map((item, i) => (
-          <div key={i} className="flex gap-2 items-center">
-            {renderRow(item, (next) => onChange(items.map((it, j) => (j === i ? next : it))))}
-            <button
-              type="button"
-              onClick={() => onChange(items.filter((_, j) => j !== i))}
-              className="text-[12px] text-red-600 shrink-0"
-            >
-              Remove
-            </button>
-          </div>
-        ))}
-        {items.length === 0 && <p className="text-[12px] text-black/40">None added.</p>}
-      </div>
-    </div>
   );
 }
 

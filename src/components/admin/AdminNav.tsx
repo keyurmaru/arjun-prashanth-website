@@ -8,6 +8,7 @@ const NAV_ITEMS: { label: string; href: string; roles: AdminRole[] }[] = [
   { label: "Dashboard", href: "/admin/dashboard", roles: ["SUPER_ADMIN", "CONTENT_MANAGER", "ORDER_MANAGER", "VIEWER"] },
   { label: "Films", href: "/admin/films", roles: ["SUPER_ADMIN", "CONTENT_MANAGER"] },
   { label: "Books", href: "/admin/books", roles: ["SUPER_ADMIN", "CONTENT_MANAGER"] },
+  { label: "Media Library", href: "/admin/media", roles: ["SUPER_ADMIN", "CONTENT_MANAGER"] },
   { label: "Orders", href: "/admin/orders", roles: ["SUPER_ADMIN", "ORDER_MANAGER", "VIEWER"] },
   { label: "Users", href: "/admin/users", roles: ["SUPER_ADMIN"] },
   { label: "Shipping Settings", href: "/admin/settings/shipping", roles: ["SUPER_ADMIN"] },

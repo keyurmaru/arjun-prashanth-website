@@ -14,6 +14,13 @@ export interface BookVariantRecord {
   dimensionsCm: { length: number; breadth: number; height: number };
 }
 
+export interface BookGalleryImage {
+  id: number;
+  imageUrl: string;
+  caption: string | null;
+  sortOrder: number;
+}
+
 export interface BookRecord {
   id: number;
   slug: string;
@@ -21,6 +28,7 @@ export interface BookRecord {
   genre: string;
   status: BookStatus;
   cover: string;
+  gallery: BookGalleryImage[];
   excerpt: string;
   description: string[];
   discover: string[] | null;
@@ -43,6 +51,10 @@ async function hydrateBook(row: RowDataPacket): Promise<BookRecord> {
     `SELECT * FROM book_variants WHERE book_id = ? ORDER BY price_inr ASC`,
     [row.id],
   );
+  const [galleryRows] = await pool.execute<RowDataPacket[]>(
+    `SELECT * FROM book_gallery WHERE book_id = ? ORDER BY sort_order ASC, id ASC`,
+    [row.id],
+  );
   return {
     id: row.id,
     slug: row.slug,
@@ -50,6 +62,7 @@ async function hydrateBook(row: RowDataPacket): Promise<BookRecord> {
     genre: row.genre,
     status: row.status,
     cover: row.cover,
+    gallery: galleryRows.map((g) => ({ id: g.id, imageUrl: g.image_url, caption: g.caption, sortOrder: g.sort_order })),
     excerpt: row.excerpt,
     description: typeof row.description_json === "string" ? JSON.parse(row.description_json) : row.description_json,
     discover: row.discover_json
@@ -164,6 +177,7 @@ export interface BookInput {
   genre: string;
   status: BookStatus;
   cover: string;
+  gallery?: { imageUrl: string; caption?: string }[];
   excerpt: string;
   description: string[];
   discover?: string[];
@@ -215,6 +229,7 @@ export async function createBook(input: BookInput): Promise<number> {
     );
     const bookId = result.insertId;
     await insertVariants(conn, bookId, input.variants);
+    await insertGallery(conn, bookId, input.gallery || []);
     await conn.commit();
     return bookId;
   } catch (err) {
@@ -254,10 +269,12 @@ export async function updateBook(id: number, input: BookInput): Promise<void> {
         id,
       ],
     );
-    // Simplest correct approach for a small variant list: replace wholesale
-    // rather than diffing updates/inserts/deletes.
+    // Simplest correct approach for a small variant/gallery list: replace
+    // wholesale rather than diffing updates/inserts/deletes.
     await conn.execute(`DELETE FROM book_variants WHERE book_id = ?`, [id]);
     await insertVariants(conn, id, input.variants);
+    await conn.execute(`DELETE FROM book_gallery WHERE book_id = ?`, [id]);
+    await insertGallery(conn, id, input.gallery || []);
     await conn.commit();
   } catch (err) {
     await conn.rollback();
@@ -285,6 +302,15 @@ async function insertVariants(conn: PoolConnection, bookId: number, variants: Bo
         v.dimensionsCm.breadth,
         v.dimensionsCm.height,
       ],
+    );
+  }
+}
+
+async function insertGallery(conn: PoolConnection, bookId: number, gallery: { imageUrl: string; caption?: string }[]): Promise<void> {
+  for (const [i, img] of gallery.entries()) {
+    await conn.execute(
+      `INSERT INTO book_gallery (book_id, image_url, caption, sort_order) VALUES (?, ?, ?, ?)`,
+      [bookId, img.imageUrl, img.caption || null, i],
     );
   }
 }
