@@ -41,6 +41,20 @@ const nextConfig = {
         source: "/(.*)",
         headers: securityHeaders,
       },
+      {
+        // These read live content from the database at request time
+        // (`export const dynamic = "force-dynamic"`) — without an explicit
+        // Cache-Control, Hostinger's LiteSpeed edge cache was observed
+        // caching the homepage's HTML anyway, so an admin publishing a
+        // change (a new featured film, a price update, ...) wouldn't show
+        // up for visitors until the cache happened to expire.
+        source: "/",
+        headers: [{ key: "Cache-Control", value: "private, no-cache, no-store, max-age=0, must-revalidate" }],
+      },
+      {
+        source: "/:path(films|books|director|author|sitemap.xml)/:rest*",
+        headers: [{ key: "Cache-Control", value: "private, no-cache, no-store, max-age=0, must-revalidate" }],
+      },
     ];
   },
 };
