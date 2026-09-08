@@ -4,20 +4,33 @@ const BASE_URL = "https://apiv2.shiprocket.in/v1/external";
 
 let cachedToken: { value: string; expiresAt: number } | null = null;
 
+/** The password often contains characters (`$`, `!`, `&`, ...) that Apache's
+ * .htaccess `SetEnv` parsing can silently drop the whole directive for —
+ * same failure mode the deploy SSH key hit, same fix: base64-encode it in
+ * the environment (SHIPROCKET_PASSWORD_B64) and decode here. Falls back to
+ * a plain SHIPROCKET_PASSWORD for local dev, where that's not a concern. */
+function getPassword(): string | undefined {
+  if (process.env.SHIPROCKET_PASSWORD_B64) {
+    return Buffer.from(process.env.SHIPROCKET_PASSWORD_B64, "base64").toString("utf-8");
+  }
+  return process.env.SHIPROCKET_PASSWORD;
+}
+
 /** Shiprocket tokens are valid ~10 days; cache in-memory (process-local,
  * same accepted limitation as rateLimit.ts) and refresh a day early. */
 export async function getToken(): Promise<string> {
   if (cachedToken && cachedToken.expiresAt > Date.now()) return cachedToken.value;
 
-  const { SHIPROCKET_EMAIL, SHIPROCKET_PASSWORD } = process.env;
-  if (!SHIPROCKET_EMAIL || !SHIPROCKET_PASSWORD) {
-    throw new Error("Shiprocket not configured — set SHIPROCKET_EMAIL/SHIPROCKET_PASSWORD.");
+  const email = process.env.SHIPROCKET_EMAIL;
+  const password = getPassword();
+  if (!email || !password) {
+    throw new Error("Shiprocket not configured — set SHIPROCKET_EMAIL/SHIPROCKET_PASSWORD_B64.");
   }
 
   const res = await fetch(`${BASE_URL}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: SHIPROCKET_EMAIL, password: SHIPROCKET_PASSWORD }),
+    body: JSON.stringify({ email, password }),
   });
   if (!res.ok) throw new Error(`Shiprocket login failed: ${res.status} ${await res.text()}`);
   const data = (await res.json()) as { token: string };
