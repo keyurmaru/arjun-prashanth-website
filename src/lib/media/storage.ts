@@ -78,6 +78,29 @@ export async function deleteFile(storageKey: string): Promise<void> {
   }
 }
 
+/** Removes the original plus any resized-derivative cache files the
+ * media-files route generated for it (see src/app/media-files/[...path]/
+ * route.ts's `__wNNN.webp` cache naming) — otherwise a deleted original
+ * leaves orphaned derivatives behind indefinitely. */
+export async function deleteFileWithDerivatives(storageKey: string): Promise<void> {
+  const ext = path.extname(storageKey);
+  const base = storageKey.slice(0, -ext.length || undefined);
+  const dir = path.dirname(resolveSafe(storageKey));
+  const baseName = path.basename(base);
+
+  await deleteFile(storageKey);
+  try {
+    const entries = await fs.readdir(dir);
+    await Promise.all(
+      entries
+        .filter((name) => name.startsWith(`${baseName}__w`) && name.endsWith(".webp"))
+        .map((name) => fs.unlink(path.join(dir, name)).catch(() => {})),
+    );
+  } catch {
+    // Directory already gone or empty — fine.
+  }
+}
+
 export function resolvedPath(storageKey: string): string {
   return resolveSafe(storageKey);
 }

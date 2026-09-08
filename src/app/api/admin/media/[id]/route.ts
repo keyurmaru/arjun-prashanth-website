@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { hasAccess } from "@/lib/auth";
 import { getMediaById, updateMedia, deleteMediaRow, findUsages } from "@/lib/mediaRepo";
-import { deleteFile } from "@/lib/media/storage";
+import { deleteFileWithDerivatives } from "@/lib/media/storage";
 import { mediaUpdateSchema } from "@/lib/validation";
 import { logAction } from "@/lib/auditLog";
 
@@ -63,7 +63,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   }
 
   const storageKey = await deleteMediaRow(mediaId);
-  if (storageKey) await deleteFile(storageKey);
+  if (storageKey) await deleteFileWithDerivatives(storageKey);
   await logAction(session, "media.delete", "media", mediaId, { forced: force, usageCount: usages.length });
 
   return NextResponse.json({ ok: true });
