@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { films } from "@/content/films";
-import { books } from "@/content/books";
+import { getPublishedBooksPublic } from "@/lib/booksRepo";
 import { siteUrl, isStaging } from "@/lib/seo";
 
 const staticRoutes = [
@@ -21,7 +21,7 @@ const staticRoutes = [
   "/refund-cancellation",
 ];
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // On staging this still enumerates every route, but robots.ts + per-page
   // noindex metadata keep it out of search engines until it points at
   // production.
@@ -36,6 +36,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   for (const film of films) {
     entries.push({ url: `${siteUrl}/films/${film.slug}`, lastModified: now });
   }
+  const books = await getPublishedBooksPublic();
   for (const book of books) {
     entries.push({ url: `${siteUrl}/books/${book.slug}`, lastModified: now });
   }

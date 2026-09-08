@@ -16,7 +16,7 @@ export default async function OrderConfirmationPage({ params }: { params: Promis
   if (!Number.isInteger(orderId)) notFound();
 
   const order = await getOrderById(orderId);
-  if (!order || order.status !== "paid") notFound();
+  if (!order || order.paymentStatus !== "paid") notFound();
 
   return (
     <div className="bg-ivory-100 text-near-black min-h-screen">
@@ -44,7 +44,7 @@ export default async function OrderConfirmationPage({ params }: { params: Promis
                   className="flex justify-between font-inter text-[13px] text-near-black/80"
                 >
                   <span>
-                    {item.bookTitle} ({item.variantFormat}) x{item.quantity}
+                    {item.bookTitle} ({item.variantFormat}){item.signed ? ", Signed" : ""} x{item.quantity}
                   </span>
                   <span>₹{((item.unitPricePaise * item.quantity) / 100).toFixed(2)}</span>
                 </div>

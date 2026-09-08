@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyWebhookSignature } from "@/lib/razorpay";
 import { fulfillPaidOrder } from "@/lib/fulfillOrder";
+import { markOrderFailed } from "@/lib/orders";
 
 // Source of truth for payment confirmation — configure this URL
 // (https://arjunprashanth.com/api/webhooks/razorpay) under Settings >
-// Webhooks in the Razorpay dashboard, subscribed to "payment.captured",
-// with RAZORPAY_WEBHOOK_SECRET set to the same secret entered there.
+// Webhooks in the Razorpay dashboard, subscribed to "payment.captured" and
+// "payment.failed", with RAZORPAY_WEBHOOK_SECRET set to the same secret
+// entered there.
 export async function POST(req: NextRequest) {
   const rawBody = await req.text();
   const signature = req.headers.get("x-razorpay-signature");
@@ -21,11 +23,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Invalid payload." }, { status: 400 });
   }
 
-  if (event.event === "payment.captured") {
-    const payment = event.payload?.payment?.entity;
-    if (payment?.order_id && payment?.id) {
-      await fulfillPaidOrder(payment.order_id, payment.id);
-    }
+  const payment = event.payload?.payment?.entity;
+
+  if (event.event === "payment.captured" && payment?.order_id && payment?.id) {
+    await fulfillPaidOrder(payment.order_id, payment.id);
+  }
+
+  if (event.event === "payment.failed" && payment?.order_id) {
+    await markOrderFailed(payment.order_id);
   }
 
   return NextResponse.json({ ok: true });

@@ -8,7 +8,7 @@ import BookGrid from "@/components/BookGrid";
 import CTASection from "@/components/CTASection";
 import JsonLd from "@/components/JsonLd";
 import { films } from "@/content/films";
-import { books } from "@/content/books";
+import { getPublishedBooksPublic } from "@/lib/booksRepo";
 import { site, storyWorlds, aboutMilestones } from "@/content/site";
 import { buildMetadata, siteUrl } from "@/lib/seo";
 
@@ -18,9 +18,9 @@ export const metadata: Metadata = buildMetadata({
   path: "/",
 });
 
-export default function HomePage() {
+export default async function HomePage() {
   const featuredFilms = films.slice(0, 4);
-  const featuredBooks = books;
+  const featuredBooks = await getPublishedBooksPublic();
 
   return (
     <>

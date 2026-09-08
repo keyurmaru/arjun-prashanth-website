@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkoutSchema } from "@/lib/validation";
 import { isRateLimited } from "@/lib/rateLimit";
-import { getPurchasableVariant } from "@/content/books";
+import { getPurchasableVariant } from "@/lib/booksRepo";
 import { createRazorpayOrder } from "@/lib/razorpay";
 import { createOrder, type ResolvedOrderItem } from "@/lib/orders";
 
@@ -39,14 +39,27 @@ export async function POST(req: NextRequest) {
   // a client-submitted price.
   const resolvedItems: ResolvedOrderItem[] = [];
   for (const line of data.items) {
-    const match = getPurchasableVariant(line.bookSlug, line.format);
+    const match = await getPurchasableVariant(line.bookSlug, line.format);
     if (!match) {
       return NextResponse.json(
         { ok: false, error: `"${line.bookSlug}" (${line.format}) is not currently available for purchase.` },
         { status: 400 },
       );
     }
+    if (match.variant.stock < line.quantity) {
+      return NextResponse.json(
+        { ok: false, error: `Only ${match.variant.stock} left of "${match.book.title}" (${match.variant.format}).` },
+        { status: 400 },
+      );
+    }
+    const signed = !!line.signed && match.book.signedCopyAvailable;
+    const personalisationMessage =
+      match.book.personalisationAvailable && line.personalisationMessage
+        ? line.personalisationMessage.slice(0, match.book.personalisationCharLimit)
+        : undefined;
+
     resolvedItems.push({
+      variantId: match.variant.id,
       bookSlug: match.book.slug,
       bookTitle: match.book.title,
       variantFormat: match.variant.format,
@@ -54,6 +67,8 @@ export async function POST(req: NextRequest) {
       quantity: line.quantity,
       weightGrams: match.variant.weightGrams,
       dimensionsCm: match.variant.dimensionsCm,
+      signed,
+      personalisationMessage,
     });
   }
 

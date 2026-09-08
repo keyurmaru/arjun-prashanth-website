@@ -1,34 +1,40 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { getBookBySlug } from "@/content/books";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 export interface CartLine {
   bookSlug: string;
   format: string;
   quantity: number;
-}
-
-export interface CartLineDisplay extends CartLine {
   title: string;
   cover: string;
   priceINR: number;
+  signed: boolean;
+  personalisationMessage?: string;
 }
 
 interface CartContextValue {
   lines: CartLine[];
-  displayLines: CartLineDisplay[];
   totalItems: number;
   subtotalINR: number;
-  addItem: (bookSlug: string, format: string, quantity?: number) => void;
-  removeItem: (bookSlug: string, format: string) => void;
-  updateQuantity: (bookSlug: string, format: string, quantity: number) => void;
+  addItem: (line: Omit<CartLine, "quantity"> & { quantity?: number }) => void;
+  removeItem: (index: number) => void;
+  updateQuantity: (index: number, quantity: number) => void;
   clear: () => void;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
 
 const STORAGE_KEY = "apr-cart";
+
+function sameLine(a: CartLine, b: Omit<CartLine, "quantity">): boolean {
+  return (
+    a.bookSlug === b.bookSlug &&
+    a.format === b.format &&
+    a.signed === b.signed &&
+    (a.personalisationMessage || "") === (b.personalisationMessage || "")
+  );
+}
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>([]);
@@ -58,51 +64,33 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [lines, hydrated]);
 
-  const addItem = (bookSlug: string, format: string, quantity = 1) => {
+  const addItem: CartContextValue["addItem"] = (line) => {
+    const quantity = line.quantity ?? 1;
     setLines((prev) => {
-      const existing = prev.find((l) => l.bookSlug === bookSlug && l.format === format);
-      if (existing) {
-        return prev.map((l) =>
-          l.bookSlug === bookSlug && l.format === format ? { ...l, quantity: l.quantity + quantity } : l,
-        );
+      const existingIndex = prev.findIndex((l) => sameLine(l, line));
+      if (existingIndex >= 0) {
+        return prev.map((l, i) => (i === existingIndex ? { ...l, quantity: l.quantity + quantity } : l));
       }
-      return [...prev, { bookSlug, format, quantity }];
+      return [...prev, { ...line, quantity }];
     });
   };
 
-  const removeItem = (bookSlug: string, format: string) => {
-    setLines((prev) => prev.filter((l) => !(l.bookSlug === bookSlug && l.format === format)));
+  const removeItem = (index: number) => {
+    setLines((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const updateQuantity = (bookSlug: string, format: string, quantity: number) => {
-    if (quantity < 1) return removeItem(bookSlug, format);
-    setLines((prev) =>
-      prev.map((l) => (l.bookSlug === bookSlug && l.format === format ? { ...l, quantity } : l)),
-    );
+  const updateQuantity = (index: number, quantity: number) => {
+    if (quantity < 1) return removeItem(index);
+    setLines((prev) => prev.map((l, i) => (i === index ? { ...l, quantity } : l)));
   };
 
   const clear = () => setLines([]);
 
-  const displayLines: CartLineDisplay[] = useMemo(
-    () =>
-      lines
-        .map((line) => {
-          const book = getBookBySlug(line.bookSlug);
-          const variant = book?.variants?.find((v) => v.format === line.format);
-          if (!book || !variant) return null;
-          return { ...line, title: book.title, cover: book.cover, priceINR: variant.priceINR };
-        })
-        .filter((l): l is CartLineDisplay => l !== null),
-    [lines],
-  );
-
   const totalItems = lines.reduce((sum, l) => sum + l.quantity, 0);
-  const subtotalINR = displayLines.reduce((sum, l) => sum + l.priceINR * l.quantity, 0);
+  const subtotalINR = lines.reduce((sum, l) => sum + l.priceINR * l.quantity, 0);
 
   return (
-    <CartContext.Provider
-      value={{ lines, displayLines, totalItems, subtotalINR, addItem, removeItem, updateQuantity, clear }}
-    >
+    <CartContext.Provider value={{ lines, totalItems, subtotalINR, addItem, removeItem, updateQuantity, clear }}>
       {children}
     </CartContext.Provider>
   );

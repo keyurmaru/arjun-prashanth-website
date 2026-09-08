@@ -1,8 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { Book } from "@/content/books";
+import type { BookRecord } from "@/lib/booksRepo";
 
-export default function BookCard({ book }: { book: Book }) {
+const STATUS_LABELS: Partial<Record<BookRecord["status"], string>> = {
+  COMING_SOON: "Coming Soon",
+  PRE_ORDER: "Pre-Order",
+  OUT_OF_STOCK: "Out of Stock",
+};
+
+export default function BookCard({ book }: { book: BookRecord }) {
+  const statusLabel = STATUS_LABELS[book.status];
   return (
     <Link href={`/books/${book.slug}`} className="group block">
       <div className="relative aspect-[2/3] w-full overflow-hidden bg-dark-800 border border-dark-800 group-hover:border-bronze/50 transition-colors duration-300">
@@ -13,9 +20,9 @@ export default function BookCard({ book }: { book: Book }) {
           sizes="(min-width: 1024px) 320px, 45vw"
           className="object-cover"
         />
-        {book.status === "coming-soon" && (
+        {statusLabel && (
           <div className="absolute top-3 right-3 bg-dark-950/90 border border-bronze/60 px-3 py-1">
-            <span className="font-inter text-[9px] tracking-[0.16em] uppercase text-bronze-light">Coming Soon</span>
+            <span className="font-inter text-[9px] tracking-[0.16em] uppercase text-bronze-light">{statusLabel}</span>
           </div>
         )}
       </div>

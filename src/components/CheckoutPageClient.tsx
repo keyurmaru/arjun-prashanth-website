@@ -16,12 +16,12 @@ const SHIPPING_INR = 60;
 
 export default function CheckoutPageClient() {
   const router = useRouter();
-  const { lines, displayLines, subtotalINR, clear } = useCart();
+  const { lines, subtotalINR, clear } = useCart();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [scriptReady, setScriptReady] = useState(false);
 
-  if (displayLines.length === 0) {
+  if (lines.length === 0) {
     return (
       <div className="text-center py-16">
         <p className="font-inter text-[15px] text-near-black/70">Your cart is empty.</p>
@@ -147,10 +147,10 @@ export default function CheckoutPageClient() {
         <div className="border border-near-black/10 p-6 h-fit">
           <p className="font-inter text-[11px] tracking-[0.16em] uppercase text-near-black/60 mb-4">Order Summary</p>
           <div className="space-y-2 mb-4">
-            {displayLines.map((line) => (
-              <div key={`${line.bookSlug}-${line.format}`} className="flex justify-between font-inter text-[13px] text-near-black/80">
+            {lines.map((line, i) => (
+              <div key={i} className="flex justify-between font-inter text-[13px] text-near-black/80">
                 <span>
-                  {line.title} ({line.format}) x{line.quantity}
+                  {line.title} ({line.format}){line.signed ? ", Signed" : ""} x{line.quantity}
                 </span>
                 <span>₹{line.priceINR * line.quantity}</span>
               </div>

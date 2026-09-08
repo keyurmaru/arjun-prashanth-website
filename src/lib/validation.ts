@@ -79,9 +79,62 @@ export const checkoutSchema = z.object({
         bookSlug: z.string().min(1),
         format: z.string().min(1),
         quantity: z.number().int().min(1).max(20),
+        signed: z.boolean().optional().default(false),
+        personalisationMessage: z.string().trim().max(500).optional(),
       }),
     )
     .min(1, "Your cart is empty."),
 });
 
 export type CheckoutFormValues = z.infer<typeof checkoutSchema>;
+
+const dimensionsSchema = z.object({
+  length: z.number().positive(),
+  breadth: z.number().positive(),
+  height: z.number().positive(),
+});
+
+export const bookVariantInputSchema = z.object({
+  id: z.number().optional(),
+  format: z.string().trim().min(1).max(60),
+  sku: z.string().trim().max(80).optional().or(z.literal("")),
+  priceINR: z.number().positive(),
+  stock: z.number().int().min(0),
+  lowStockThreshold: z.number().int().min(0),
+  weightGrams: z.number().positive(),
+  dimensionsCm: dimensionsSchema,
+});
+
+export const bookInputSchema = z.object({
+  slug: z
+    .string()
+    .trim()
+    .min(1)
+    .max(120)
+    .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "Slug must be lowercase letters, numbers, and hyphens only."),
+  title: z.string().trim().min(1).max(200),
+  genre: z.string().trim().min(1).max(100),
+  status: z.enum(["DRAFT", "COMING_SOON", "PRE_ORDER", "PUBLISHED", "OUT_OF_STOCK", "ARCHIVED"]),
+  cover: z.string().trim().min(1).max(300),
+  excerpt: z.string().trim().min(1).max(1000),
+  description: z.array(z.string().trim().min(1)).min(1),
+  discover: z.array(z.string().trim().min(1)).optional(),
+  signedCopyAvailable: z.boolean(),
+  personalisationAvailable: z.boolean(),
+  personalisationCharLimit: z.number().int().min(0).max(2000),
+  sortOrder: z.number().int(),
+  seoTitle: z.string().trim().max(200).optional().or(z.literal("")),
+  seoDescription: z.string().trim().max(300).optional().or(z.literal("")),
+  variants: z.array(bookVariantInputSchema).min(1, "At least one variant is required."),
+});
+
+export type BookInputValues = z.infer<typeof bookInputSchema>;
+
+export const adminUserInputSchema = z.object({
+  email: z.string().trim().email().max(200),
+  name: z.string().trim().min(1).max(120),
+  password: z.string().min(10, "Password must be at least 10 characters.").max(200),
+  role: z.enum(["SUPER_ADMIN", "CONTENT_MANAGER", "ORDER_MANAGER", "VIEWER"]),
+});
+
+export type AdminUserInputValues = z.infer<typeof adminUserInputSchema>;

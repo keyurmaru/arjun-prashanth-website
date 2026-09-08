@@ -1,3 +1,9 @@
+// Historical reference only — the public site and checkout now read books
+// from the database (see src/lib/booksRepo.ts and scripts/seed-books.mjs,
+// which seeded this exact verified data). Nothing at runtime imports this
+// file anymore; it's kept so the original verified WooCommerce-sourced
+// content isn't lost.
+
 export interface BookVariant {
   format: string;
   priceINR: number;

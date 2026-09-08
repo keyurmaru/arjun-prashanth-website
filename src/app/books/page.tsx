@@ -4,7 +4,7 @@ import SectionHeading from "@/components/SectionHeading";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import BookGrid from "@/components/BookGrid";
 import CTASection from "@/components/CTASection";
-import { books } from "@/content/books";
+import { getPublishedBooksPublic } from "@/lib/booksRepo";
 import { buildMetadata } from "@/lib/seo";
 
 const title = "Books";
@@ -12,7 +12,8 @@ const description = "Books by Arjun Prashanth — including the literary crime n
 
 export const metadata: Metadata = buildMetadata({ title, description, path: "/books" });
 
-export default function BooksPage() {
+export default async function BooksPage() {
+  const books = await getPublishedBooksPublic();
   return (
     <div className="bg-ivory-100 text-near-black min-h-screen">
       <section className="pt-40 pb-20 lg:pb-28 border-b border-near-black/10">

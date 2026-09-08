@@ -6,7 +6,7 @@ import SectionHeading from "@/components/SectionHeading";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import CTASection from "@/components/CTASection";
 import JsonLd from "@/components/JsonLd";
-import { getBookBySlug } from "@/content/books";
+import { getBookPublicBySlug } from "@/lib/booksRepo";
 import { site } from "@/content/site";
 import { buildMetadata } from "@/lib/seo";
 
@@ -15,8 +15,8 @@ const description = "Arjun Prashanth Rao — Author. Stories that stay long afte
 
 export const metadata: Metadata = buildMetadata({ title, description, path: "/author" });
 
-export default function AuthorPage() {
-  const featured = getBookBySlug("the-line-that-holds")!;
+export default async function AuthorPage() {
+  const featured = await getBookPublicBySlug("the-line-that-holds");
 
   return (
     <div className="bg-dark-950">
@@ -69,17 +69,23 @@ export default function AuthorPage() {
 
       <section className="border-b border-dark-800 bg-ivory-100 text-near-black">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-20 lg:py-28 grid lg:grid-cols-[280px_1fr] gap-14 items-center">
-          <Reveal variant="left">
-            <div className="relative aspect-[2/3] w-full max-w-xs">
-              <Image src={featured.cover} alt={`${featured.title} — book cover`} fill sizes="280px" className="object-cover" />
-            </div>
-          </Reveal>
+          {featured && (
+            <Reveal variant="left">
+              <div className="relative aspect-[2/3] w-full max-w-xs">
+                <Image src={featured.cover} alt={`${featured.title} — book cover`} fill sizes="280px" className="object-cover" />
+              </div>
+            </Reveal>
+          )}
           <Reveal delay={100}>
             <p className="font-inter text-[11px] tracking-[0.16em] uppercase text-bronze mb-3">Featured Published Work</p>
-            <h2 className="font-cormorant font-medium text-near-black" style={{ fontSize: "clamp(1.9rem, 4vw, 2.5rem)" }}>
-              {featured.title}
-            </h2>
-            <p className="font-inter text-[13px] text-near-black/70 mt-2">By Arjun Prashanth · Genre: {featured.genre}</p>
+            {featured && (
+              <>
+                <h2 className="font-cormorant font-medium text-near-black" style={{ fontSize: "clamp(1.9rem, 4vw, 2.5rem)" }}>
+                  {featured.title}
+                </h2>
+                <p className="font-inter text-[13px] text-near-black/70 mt-2">By Arjun Prashanth · Genre: {featured.genre}</p>
+              </>
+            )}
             <Link
               href="/books"
               className="inline-block font-inter text-[11px] tracking-[0.16em] uppercase px-7 py-3 border border-near-black/30 text-near-black hover:border-bronze hover:text-bronze transition-colors mt-7"

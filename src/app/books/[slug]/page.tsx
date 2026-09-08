@@ -5,23 +5,30 @@ import Reveal from "@/components/Reveal";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import JsonLd from "@/components/JsonLd";
 import BookPurchaseBox from "@/components/BookPurchaseBox";
-import { books, getBookBySlug } from "@/content/books";
+import { getBookPublicBySlug } from "@/lib/booksRepo";
 import { buildMetadata, siteUrl } from "@/lib/seo";
 
-export function generateStaticParams() {
-  return books.map((b) => ({ slug: b.slug }));
-}
+// Books are DB-backed and can change independently of a deploy — this page
+// is intentionally dynamic (no generateStaticParams) rather than statically
+// generated at build time.
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const book = getBookBySlug(slug);
+  const book = await getBookPublicBySlug(slug);
   if (!book) return buildMetadata({ title: "Book Not Found", description: "", path: `/books/${slug}` });
-  return buildMetadata({ title: book.title, description: book.excerpt, path: `/books/${book.slug}`, image: book.cover });
+  return {
+    ...buildMetadata({
+      title: book.seoTitle || book.title,
+      description: book.seoDescription || book.excerpt,
+      path: `/books/${book.slug}`,
+      image: book.cover,
+    }),
+  };
 }
 
 export default async function BookDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const book = getBookBySlug(slug);
+  const book = await getBookPublicBySlug(slug);
   if (!book) notFound();
 
   return (
@@ -34,7 +41,7 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
           author: { "@type": "Person", name: "Arjun Prashanth" },
           genre: book.genre,
           image: book.cover,
-          ...(book.status === "published" && book.variants
+          ...(book.status === "PUBLISHED" && book.variants.length > 0
             ? {
                 offers: book.variants.map((v) => ({
                   "@type": "Offer",
@@ -75,12 +82,6 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
             </h1>
             <p className="font-inter text-[12px] tracking-[0.1em] uppercase text-bronze mt-4">{book.genre}</p>
             <p className="font-inter text-[13px] text-near-black/60 mt-1">By Arjun Prashanth</p>
-
-            {book.status === "coming-soon" && (
-              <span className="inline-block mt-6 font-inter text-[11px] tracking-[0.16em] uppercase px-5 py-2 border border-bronze text-bronze">
-                Coming Soon
-              </span>
-            )}
 
             <p className="font-inter text-[15px] leading-relaxed text-near-black/80 mt-8 max-w-xl">{book.excerpt}</p>
 

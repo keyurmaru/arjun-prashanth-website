@@ -5,9 +5,9 @@ import Image from "next/image";
 import { useCart } from "@/context/CartContext";
 
 export default function CartPageClient() {
-  const { displayLines, updateQuantity, removeItem, subtotalINR } = useCart();
+  const { lines, updateQuantity, removeItem, subtotalINR } = useCart();
 
-  if (displayLines.length === 0) {
+  if (lines.length === 0) {
     return (
       <div className="text-center py-16">
         <p className="font-inter text-[15px] text-near-black/70">Your cart is empty.</p>
@@ -24,21 +24,27 @@ export default function CartPageClient() {
   return (
     <div className="grid lg:grid-cols-[1fr_340px] gap-14">
       <div className="flex flex-col gap-6">
-        {displayLines.map((line) => (
-          <div key={`${line.bookSlug}-${line.format}`} className="flex gap-5 border-b border-near-black/10 pb-6">
+        {lines.map((line, index) => (
+          <div key={index} className="flex gap-5 border-b border-near-black/10 pb-6">
             <div className="relative w-20 aspect-[2/3] shrink-0">
               <Image src={line.cover} alt={line.title} fill sizes="80px" className="object-cover" />
             </div>
             <div className="flex-1">
               <p className="font-cormorant font-medium text-near-black text-lg">{line.title}</p>
               <p className="font-inter text-[12px] text-near-black/60 mt-1">{line.format}</p>
+              {line.signed && <p className="font-inter text-[11px] text-bronze mt-0.5">Signed Copy</p>}
+              {line.personalisationMessage && (
+                <p className="font-inter text-[11px] text-near-black/50 mt-0.5">
+                  Personalisation: &quot;{line.personalisationMessage}&quot;
+                </p>
+              )}
               <p className="font-inter text-[13px] text-near-black/80 mt-2">₹{line.priceINR}</p>
 
               <div className="flex items-center gap-3 mt-4">
                 <div className="flex items-center border border-near-black/20">
                   <button
                     type="button"
-                    onClick={() => updateQuantity(line.bookSlug, line.format, line.quantity - 1)}
+                    onClick={() => updateQuantity(index, line.quantity - 1)}
                     className="w-8 h-8 flex items-center justify-center text-near-black hover:bg-near-black/5"
                     aria-label="Decrease quantity"
                   >
@@ -47,7 +53,7 @@ export default function CartPageClient() {
                   <span className="w-8 text-center font-inter text-[13px]">{line.quantity}</span>
                   <button
                     type="button"
-                    onClick={() => updateQuantity(line.bookSlug, line.format, line.quantity + 1)}
+                    onClick={() => updateQuantity(index, line.quantity + 1)}
                     className="w-8 h-8 flex items-center justify-center text-near-black hover:bg-near-black/5"
                     aria-label="Increase quantity"
                   >
@@ -56,7 +62,7 @@ export default function CartPageClient() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => removeItem(line.bookSlug, line.format)}
+                  onClick={() => removeItem(index)}
                   className="font-inter text-[11px] tracking-[0.1em] uppercase text-near-black/50 hover:text-near-black"
                 >
                   Remove

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { Cormorant_Garamond, Inter } from "next/font/google";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -36,7 +37,21 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Set by middleware.ts only for /admin routes — the admin panel has its
+  // own layout/theme and shouldn't carry the public site's Header/Footer,
+  // cart, or analytics tag.
+  const pathname = (await headers()).get("x-pathname") || "";
+  const isAdmin = pathname.startsWith("/admin");
+
+  if (isAdmin) {
+    return (
+      <html lang="en" className={`${cormorant.variable} ${inter.variable}`}>
+        <body className="font-inter">{children}</body>
+      </html>
+    );
+  }
+
   return (
     <html lang="en" className={`${cormorant.variable} ${inter.variable}`}>
       <body className="bg-dark-950 text-ivory-100 font-inter">
