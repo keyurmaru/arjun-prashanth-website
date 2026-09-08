@@ -20,7 +20,9 @@ const nextConfig = {
     ],
   },
   async headers() {
-    const isStaging = process.env.NEXT_PUBLIC_IS_STAGING === "true";
+    // Hosting-panel env var UIs don't always preserve exact casing (this one
+    // is stored as "TRUE" in hPanel), so compare case-insensitively.
+    const isStaging = (process.env.NEXT_PUBLIC_IS_STAGING || "").toLowerCase() === "true";
     const securityHeaders = [
       { key: "X-Content-Type-Options", value: "nosniff" },
       { key: "X-Frame-Options", value: "DENY" },

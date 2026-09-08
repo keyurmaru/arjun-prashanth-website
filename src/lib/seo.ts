@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 
-const isStaging = process.env.NEXT_PUBLIC_IS_STAGING === "true";
+// Hosting-panel env var UIs don't always preserve exact casing (this one is
+// stored as "TRUE" in hPanel), so compare case-insensitively rather than
+// requiring an exact "true" match.
+export const isStaging = (process.env.NEXT_PUBLIC_IS_STAGING || "").toLowerCase() === "true";
 
 // On production this must be arjunprashanth.com; on staging it points at the
 // staging origin so canonicals/OG urls never leak the wrong domain.

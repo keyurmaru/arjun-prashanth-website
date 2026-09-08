@@ -1,0 +1,92 @@
+name: Build and deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+# Only one deploy at a time; a newer push cancels an in-flight older one.
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: true
+
+env:
+  SSH_HOST: in-mum-web1992.main-hosting.eu
+  SSH_PORT: 65002
+  SSH_USER: u752714989
+  REMOTE_HB: /home/u752714989/domains/paleturquoise-sandpiper-308359.hostingersite.com/hbuilds
+  # These are baked into the build (Next.js inlines NEXT_PUBLIC_* at build
+  # time), so they're set here rather than only on the server. Flip
+  # NEXT_PUBLIC_IS_STAGING to "false" and NEXT_PUBLIC_SITE_URL to the
+  # production domain only when this workflow is intentionally pointed at
+  # production — never as an incidental change.
+  NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL || 'https://paleturquoise-sandpiper-308359.hostingersite.com' }}
+  NEXT_PUBLIC_IS_STAGING: ${{ vars.NEXT_PUBLIC_IS_STAGING || 'true' }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Assemble standalone deploy payload
+        run: |
+          set -euo pipefail
+          rm -rf deploy_payload
+          mkdir -p deploy_payload
+          cp -r .next/standalone/. deploy_payload/
+          mkdir -p deploy_payload/.next
+          cp -r .next/static deploy_payload/.next/static
+          cp -r public deploy_payload/public
+          mkdir -p deploy_payload/tmp
+
+      - name: Set up deploy SSH key
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Sync build to staging area on server
+        run: |
+          set -euo pipefail
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/deploy_key -p $SSH_PORT -o StrictHostKeyChecking=yes" \
+            deploy_payload/ "$SSH_USER@$SSH_HOST:$REMOTE_HB/incoming/nodejs/"
+
+      - name: Activate new version
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" -o StrictHostKeyChecking=yes \
+            "$SSH_USER@$SSH_HOST" activate
+
+      - name: Verify the site responds
+        run: |
+          set -euo pipefail
+          sleep 5
+          code=$(curl -s -o /dev/null -w "%{http_code}" "$NEXT_PUBLIC_SITE_URL/")
+          echo "Homepage responded with HTTP $code"
+          if [ "$code" != "200" ]; then
+            echo "::error::Site did not return 200 after deploy"
+            exit 1
+          fi
