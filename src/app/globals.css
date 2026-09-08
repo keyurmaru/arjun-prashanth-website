@@ -1,0 +1,143 @@
+@import "tailwindcss";
+
+@theme {
+  --font-cormorant: "Cormorant Garamond", Georgia, serif;
+  --font-inter: "Inter", system-ui, -apple-system, sans-serif;
+
+  --color-dark-950: #0d0f10;
+  --color-dark-900: #17191b;
+  --color-dark-800: #292b2d;
+  --color-ivory-50: #f4f0e8;
+  --color-ivory-100: #f3efe7;
+  --color-muted: #8c8983;
+  --color-bronze: #b58a62;
+  --color-bronze-light: #c9a07a;
+  --color-near-black: #171717;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-inter);
+  background-color: #0d0f10;
+  color: #f3efe7;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::-webkit-scrollbar {
+  width: 3px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #292b2d;
+  border-radius: 2px;
+}
+
+:focus-visible {
+  outline: 2px solid #b58a62;
+  outline-offset: 3px;
+}
+
+.reveal-up {
+  opacity: 0;
+  transform: translateY(32px);
+  transition:
+    opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal-up.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-32px);
+  transition:
+    opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal-left.is-visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.reveal-fade {
+  opacity: 0;
+  transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal-fade.is-visible {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-up,
+  .reveal-left,
+  .reveal-fade {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Legal/editorial pages ported from the production WordPress content */
+.apr-legal .apr-eyebrow {
+  font-family: var(--font-inter);
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-bronze);
+  margin-bottom: 0.75rem;
+}
+.apr-legal .apr-h1 {
+  font-family: var(--font-cormorant);
+  font-weight: 500;
+  color: var(--color-near-black);
+  margin-bottom: 0.75rem;
+}
+.apr-legal .apr-legal-meta {
+  color: rgba(23, 23, 23, 0.6);
+  font-size: 0.9rem;
+  margin-bottom: 2.5rem;
+}
+.apr-legal .apr-h2 {
+  font-family: var(--font-cormorant);
+  font-size: 1.5rem;
+  color: var(--color-near-black);
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+}
+.apr-legal .apr-h3 {
+  font-family: var(--font-inter);
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--color-near-black);
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+.apr-legal .apr-body {
+  color: rgba(23, 23, 23, 0.75);
+  line-height: 1.75;
+  margin-bottom: 1rem;
+}
+.apr-legal .apr-legal-list {
+  list-style: disc;
+  padding-left: 1.25rem;
+  color: rgba(23, 23, 23, 0.75);
+  line-height: 1.75;
+  margin-bottom: 1rem;
+}
+.apr-legal .apr-legal-list li {
+  margin-bottom: 0.5rem;
+}
+.apr-legal a {
+  color: var(--color-bronze);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

@@ -1,0 +1,16 @@
+node_modules/
+.next/
+out/
+build/
+.env
+.env.local
+.env.*.local
+*.tsbuildinfo
+*.log
+.DS_Store
+npm-debug.log*
+
+# Reference-only, not part of the shipped site
+_legacy-vite-scaffold/
+Images_videos/
+.figma/

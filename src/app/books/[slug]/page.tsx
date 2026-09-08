@@ -1,0 +1,133 @@
+import type { Metadata } from "next";
+import Image from "next/image";
+import { notFound } from "next/navigation";
+import Reveal from "@/components/Reveal";
+import Breadcrumbs from "@/components/Breadcrumbs";
+import JsonLd from "@/components/JsonLd";
+import { books, getBookBySlug } from "@/content/books";
+import { buildMetadata } from "@/lib/seo";
+
+export function generateStaticParams() {
+  return books.map((b) => ({ slug: b.slug }));
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const book = getBookBySlug(slug);
+  if (!book) return buildMetadata({ title: "Book Not Found", description: "", path: `/books/${slug}` });
+  return buildMetadata({ title: book.title, description: book.excerpt, path: `/books/${book.slug}`, image: book.cover });
+}
+
+export default async function BookDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const book = getBookBySlug(slug);
+  if (!book) notFound();
+
+  return (
+    <div className="bg-ivory-100 text-near-black min-h-screen">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "Book",
+          name: book.title,
+          author: { "@type": "Person", name: "Arjun Prashanth" },
+          genre: book.genre,
+          image: book.cover,
+          ...(book.status === "published" && book.variants
+            ? {
+                offers: book.variants.map((v) => ({
+                  "@type": "Offer",
+                  price: v.priceINR,
+                  priceCurrency: "INR",
+                  availability: "https://schema.org/InStock",
+                  url: book.purchaseUrl,
+                })),
+              }
+            : {}),
+        }}
+      />
+
+      <section className="pt-40 pb-16 border-b border-near-black/10">
+        <div className="max-w-[1400px] mx-auto px-6 lg:px-10">
+          <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Books", href: "/books" }, { label: book.title }]} />
+        </div>
+      </section>
+
+      <section>
+        <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-16 lg:py-20 grid lg:grid-cols-[360px_1fr] gap-14">
+          <Reveal variant="left">
+            <div className="relative aspect-[2/3] w-full max-w-sm">
+              <Image
+                src={book.cover}
+                alt={`${book.title} — book cover`}
+                fill
+                sizes="(min-width: 1024px) 360px, 80vw"
+                className="object-cover"
+                priority
+              />
+            </div>
+          </Reveal>
+
+          <Reveal delay={100}>
+            <h1 className="font-cormorant font-medium text-near-black" style={{ fontSize: "clamp(2.25rem, 5vw, 3.5rem)" }}>
+              {book.title}
+            </h1>
+            <p className="font-inter text-[12px] tracking-[0.1em] uppercase text-bronze mt-4">{book.genre}</p>
+            <p className="font-inter text-[13px] text-near-black/60 mt-1">By Arjun Prashanth</p>
+
+            {book.status === "coming-soon" ? (
+              <span className="inline-block mt-6 font-inter text-[11px] tracking-[0.16em] uppercase px-5 py-2 border border-bronze text-bronze">
+                Coming Soon
+              </span>
+            ) : (
+              book.variants && (
+                <div className="flex flex-wrap gap-4 mt-6">
+                  {book.variants.map((v) => (
+                    <span key={v.format} className="font-inter text-[13px] text-near-black/80 border border-near-black/20 px-4 py-2">
+                      {v.format} — ₹{v.priceINR}
+                    </span>
+                  ))}
+                </div>
+              )
+            )}
+
+            <p className="font-inter text-[15px] leading-relaxed text-near-black/80 mt-8 max-w-xl">{book.excerpt}</p>
+
+            {book.description.map((p, i) => (
+              <p key={i} className="font-inter text-[15px] leading-relaxed text-near-black/70 mt-5 max-w-xl">
+                {p}
+              </p>
+            ))}
+
+            {book.discover && (
+              <ul className="grid sm:grid-cols-2 gap-3 mt-8 max-w-xl">
+                {book.discover.map((d) => (
+                  <li key={d} className="font-inter text-[13px] text-near-black/70 border-l-2 border-bronze/50 pl-4 py-0.5">
+                    {d}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <div className="mt-10">
+              {book.status === "published" && book.purchaseUrl ? (
+                <a
+                  href={book.purchaseUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block font-inter text-[11px] tracking-[0.16em] uppercase px-8 py-3.5 bg-near-black text-ivory-100 hover:bg-bronze hover:text-near-black transition-colors duration-300"
+                >
+                  Buy Book
+                </a>
+              ) : (
+                <p className="font-inter text-[12px] tracking-[0.1em] uppercase text-near-black/50">
+                  Purchase details will be available closer to release.
+                </p>
+              )}
+            </div>
+          </Reveal>
+        </div>
+      </section>
+    </div>
+  );
+}
