@@ -7,7 +7,21 @@ import { logAction } from "@/lib/auditLog";
 
 const patchSchema = z.object({
   orderStatus: z.enum(["pending", "processing", "packed", "shipped", "delivered", "cancelled", "returned"]).optional(),
-  shippingStatus: z.enum(["not_shipped", "label_created", "shipped", "delivered"]).optional(),
+  shippingStatus: z
+    .enum([
+      "not_shipped",
+      "shipment_created",
+      "awb_assigned",
+      "pickup_requested",
+      "picked_up",
+      "in_transit",
+      "out_for_delivery",
+      "delivered",
+      "rto",
+      "cancelled",
+      "failed",
+    ])
+    .optional(),
   trackingUrl: z.string().max(300).optional(),
   awbCode: z.string().max(64).optional(),
   adminNotes: z.string().max(5000).optional(),

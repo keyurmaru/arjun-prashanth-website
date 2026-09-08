@@ -9,6 +9,7 @@ const NAV_ITEMS: { label: string; href: string; roles: AdminRole[] }[] = [
   { label: "Books", href: "/admin/books", roles: ["SUPER_ADMIN", "CONTENT_MANAGER"] },
   { label: "Orders", href: "/admin/orders", roles: ["SUPER_ADMIN", "ORDER_MANAGER", "VIEWER"] },
   { label: "Users", href: "/admin/users", roles: ["SUPER_ADMIN"] },
+  { label: "Shipping Settings", href: "/admin/settings/shipping", roles: ["SUPER_ADMIN"] },
 ];
 
 export default function AdminNav({ role, name }: { role: AdminRole; name: string }) {

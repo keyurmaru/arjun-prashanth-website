@@ -1,8 +1,24 @@
-import { getOrderByRazorpayOrderId, markOrderPaid, recordShiprocketDetails } from "@/lib/orders";
+import { getOrderByRazorpayOrderId, markOrderPaid, recordShipmentCreated, markShipmentFailed, type OrderRecord } from "@/lib/orders";
 import { createShiprocketOrder } from "@/lib/shiprocket";
 import { decrementStock } from "@/lib/booksRepo";
 import { sendMail } from "@/lib/mailer";
 import { site } from "@/content/site";
+
+/** Creates the Shiprocket order for an already-paid order. Shared by the
+ * automatic post-payment flow and the admin "Retry Shipment" action, so
+ * both go through the exact same success/failure handling. Returns whether
+ * it succeeded — never throws. */
+export async function createShipmentForOrder(order: OrderRecord): Promise<boolean> {
+  try {
+    const shiprocket = await createShiprocketOrder(order, order.id);
+    await recordShipmentCreated(order.razorpayOrderId, shiprocket);
+    return true;
+  } catch (err) {
+    console.error(`[fulfillOrder] Shiprocket order creation failed for order #${order.id}:`, err);
+    await markShipmentFailed(order.id);
+    return false;
+  }
+}
 
 /** Called from both the client-side verify endpoint and the Razorpay
  * webhook — whichever lands first does the work; markOrderPaid's
@@ -29,15 +45,13 @@ export async function fulfillPaidOrder(razorpayOrderId: string, razorpayPaymentI
     }
   }
 
-  try {
-    const shiprocket = await createShiprocketOrder(order, order.id);
-    await recordShiprocketDetails(razorpayOrderId, shiprocket);
-  } catch (err) {
-    // Payment is captured and recorded either way — a Shiprocket failure
-    // must not block confirming the order to the customer. Surface it via
-    // the notification email so the order can be shipped manually.
-    console.error("[fulfillOrder] Shiprocket order creation failed:", err);
-  }
+  // Payment is captured and recorded either way — per the Shiprocket
+  // integration doc's "Critical Failure Rule," a fulfilment failure must
+  // never fail or cancel an already-paid order; createShipmentForOrder
+  // flags it as a shipping state (shown in /admin/orders with a Retry
+  // Shipment action) instead.
+  const shipmentOk = await createShipmentForOrder(order);
+  const shipmentFailed = !shipmentOk;
 
   const itemLines = order.items.map((i) => {
     const extras = [i.signed && "Signed", i.personalisationMessage && `Personalised: "${i.personalisationMessage}"`]
@@ -56,6 +70,9 @@ export async function fulfillPaidOrder(razorpayOrderId: string, razorpayPaymentI
     `Order #${order.id} — payment ${razorpayPaymentId}`,
     ...(oversold.length > 0
       ? ["", `⚠ OVERSOLD — payment captured but insufficient stock for: ${oversold.join(", ")}. Resolve manually (refund or restock).`]
+      : []),
+    ...(shipmentFailed
+      ? ["", `⚠ SHIPMENT CREATION FAILED — payment is fine, but the Shiprocket order didn't get created. Retry from the order's admin page.`]
       : []),
     ``,
     `Customer: ${order.address.name}`,
@@ -90,4 +107,34 @@ export async function fulfillPaidOrder(razorpayOrderId: string, razorpayPaymentI
     `— ${site.name}`,
   ].join("\n");
   await sendMail({ to: order.address.email, subject: `Your order #${order.id} is confirmed`, text: customerText });
+}
+
+/** Sent from the Shiprocket tracking webhook when shipping_status genuinely
+ * transitions (guarded by the caller comparing previousStatus) — never on a
+ * repeat webhook delivery of a status the order is already at. */
+export async function sendShipmentStatusEmail(order: OrderRecord, event: "shipped" | "delivered"): Promise<void> {
+  const trackingLine = order.trackingUrl ? `Track your order: ${order.trackingUrl}` : "";
+  const awbLine = order.awbCode ? `AWB: ${order.awbCode}${order.courierName ? ` (${order.courierName})` : ""}` : "";
+
+  const text =
+    event === "shipped"
+      ? [
+          `Good news, ${order.address.name} — your order #${order.id} has shipped!`,
+          ``,
+          awbLine,
+          trackingLine,
+          ``,
+          `— ${site.name}`,
+        ]
+      : [
+          `Your order #${order.id} has been delivered. We hope you enjoy it!`,
+          ``,
+          `— ${site.name}`,
+        ];
+
+  await sendMail({
+    to: order.address.email,
+    subject: event === "shipped" ? `Your order #${order.id} has shipped` : `Your order #${order.id} was delivered`,
+    text: text.filter(Boolean).join("\n"),
+  });
 }

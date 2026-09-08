@@ -3,6 +3,7 @@ import { getOrderById } from "@/lib/orders";
 import { getSession } from "@/lib/session";
 import { hasAccess } from "@/lib/auth";
 import OrderStatusForm from "@/components/admin/OrderStatusForm";
+import ShiprocketPanel from "@/components/admin/ShiprocketPanel";
 
 export default async function AdminOrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -53,6 +54,7 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
             <div key={i} className="text-[14px] flex justify-between">
               <span>
                 {item.quantity} x {item.bookTitle} ({item.variantFormat})
+                {item.sku && <span className="text-black/40"> · SKU {item.sku}</span>}
                 {item.signed && " · Signed"}
                 {item.personalisationMessage && (
                   <span className="block text-[12px] text-black/50 mt-0.5">
@@ -67,7 +69,12 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
       </div>
 
       {canWrite ? (
-        <OrderStatusForm order={order} />
+        <>
+          <div className="mb-6">
+            <ShiprocketPanel order={order} />
+          </div>
+          <OrderStatusForm order={order} />
+        </>
       ) : (
         <p className="text-[13px] text-black/40">You have read-only access to orders.</p>
       )}

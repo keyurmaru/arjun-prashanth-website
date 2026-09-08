@@ -10,9 +10,11 @@ const PROTECTED_PREFIXES: { prefix: string; module: keyof typeof ROLE_ACCESS }[]
   { prefix: "/admin/users", module: "users" },
   { prefix: "/admin/orders", module: "orders_read" },
   { prefix: "/admin/dashboard", module: "dashboard" },
+  { prefix: "/admin/settings", module: "settings" },
   { prefix: "/api/admin/books", module: "books" },
   { prefix: "/api/admin/users", module: "users" },
   { prefix: "/api/admin/orders", module: "orders_read" },
+  { prefix: "/api/admin/settings", module: "settings" },
 ];
 
 // Only /admin and /api/admin ever hit this middleware (see matcher below).

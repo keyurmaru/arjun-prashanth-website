@@ -16,6 +16,7 @@ export default async function AdminDashboardPage() {
         <StatCard label="Pending Payment" value={stats.pendingPayments} />
         <StatCard label="Paid Orders" value={stats.paidOrders} />
         <StatCard label="Failed Payments" value={stats.failedPayments} />
+        <StatCard label="Shipment Failures" value={stats.failedShipments} />
         <StatCard label="Total Revenue" value={`₹${(stats.revenuePaise / 100).toLocaleString("en-IN")}`} />
       </div>
 

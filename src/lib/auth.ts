@@ -58,6 +58,7 @@ export const ROLE_ACCESS: Record<string, AdminRole[]> = {
   orders_write: ["SUPER_ADMIN", "ORDER_MANAGER"],
   orders_read: ["SUPER_ADMIN", "ORDER_MANAGER", "VIEWER"],
   users: ["SUPER_ADMIN"],
+  settings: ["SUPER_ADMIN"],
   dashboard: ["SUPER_ADMIN", "CONTENT_MANAGER", "ORDER_MANAGER", "VIEWER"],
 };
 

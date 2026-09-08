@@ -27,12 +27,12 @@ ever get locked out.
 
 ## Roles
 
-| Role | Books | Orders | Users |
-|---|---|---|---|
-| `SUPER_ADMIN` | full | full | full |
-| `CONTENT_MANAGER` | full | — | — |
-| `ORDER_MANAGER` | — | full | — |
-| `VIEWER` | — | read-only | — |
+| Role | Books | Orders | Users | Settings |
+|---|---|---|---|---|
+| `SUPER_ADMIN` | full | full | full | full |
+| `CONTENT_MANAGER` | full | — | — | — |
+| `ORDER_MANAGER` | — | full | — | — |
+| `VIEWER` | — | read-only | — | — |
 
 Enforced in `src/middleware.ts` (route-level) and again inside the order
 PATCH handler (`src/app/api/admin/orders/[id]/route.ts`) since `VIEWER` can
@@ -76,19 +76,42 @@ shows the customer, address, items (with signed/personalisation flags),
 and lets `SUPER_ADMIN`/`ORDER_MANAGER` update:
 
 - **Order status**: `pending → processing → packed → shipped → delivered`,
-  or `cancelled` / `returned`.
-- **Shipping status**, AWB/tracking number, tracking URL — set manually
-  today. If you connect Shiprocket (see below), successful payments
-  already create the Shiprocket order automatically and store its id, but
-  there's no Shiprocket *webhook* listener yet, so shipment status updates
-  don't flow back in on their own — update them here as you ship.
+  or `cancelled` / `returned` — always manual, yours to control.
+- **Shipping (Shiprocket)**: a dedicated panel on the order page with one
+  button per step — Create Shipment, Assign AWB, Request Pickup, Generate
+  Label, Generate Invoice, Refresh Tracking — each only shown when valid
+  for the shipment's current state. Successful payment already
+  auto-creates the Shiprocket order; if that step fails, the order stays
+  `PAID` untouched and the panel shows **Retry Shipment**. Once Shiprocket
+  sends tracking webhooks (configured below), status/label/invoice/AWB
+  update automatically — the manual "AWB (manual override)" field further
+  down is only for shipments booked outside Shiprocket entirely.
 - **Internal notes** — free text, staff-only.
+
+### Shiprocket webhook (one-time setup)
+
+In Shiprocket → Settings → API → Webhooks, add:
+- URL: `https://arjunprashanth.com/api/webhooks/shiprocket`
+- Header/token: the value of `SHIPROCKET_WEBHOOK_SECRET` (sent back as
+  `x-api-key` and verified server-side)
+
+Once configured, shipment status flows back automatically and the
+customer gets a "shipped" email (with AWB/tracking) on the first transit
+event, and a "delivered" email when Shiprocket reports delivery — both
+guarded against duplicate webhook deliveries, so retries never send twice.
 
 Payment status (`pending/paid/failed/refunded/partially_refunded`) is
 driven by Razorpay, not editable here — it's set by the webhook
 (`/api/webhooks/razorpay`) or the client-side verify call, whichever lands
 first, and is idempotent (a duplicate webhook delivery can't double-charge
 stock or send duplicate emails — see `src/lib/fulfillOrder.ts`).
+
+## Settings
+
+`/admin/settings/shipping` (SUPER_ADMIN only) — shows whether Shiprocket
+credentials, the pickup location, and the webhook secret are configured,
+plus a **Test Connection** button that verifies the credentials work
+without ever displaying them.
 
 ## Database setup (one-time)
 
@@ -115,4 +138,8 @@ files, not database-backed or admin-editable:
   enum above, no "publish at a future date" scheduling.
 - Audit log UI — actions are recorded in the `audit_log` table
   (`src/lib/auditLog.ts`) but there's no admin page to browse it yet.
-- A Shiprocket webhook listener to pull shipment status back automatically.
+- Serviceability/rate check at checkout (`checkServiceability` exists in
+  `src/lib/shiprocket.ts` but isn't called from the checkout flow —
+  shipping is a flat rate today, see `src/app/api/orders/create/route.ts`).
+- Courier selection — `Assign AWB` lets Shiprocket pick the courier; there's
+  no UI to choose a specific one from `checkServiceability`'s results.

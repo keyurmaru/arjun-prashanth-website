@@ -5,7 +5,19 @@ import { useRouter } from "next/navigation";
 import type { OrderRecord } from "@/lib/orders";
 
 const ORDER_STATUSES = ["pending", "processing", "packed", "shipped", "delivered", "cancelled", "returned"];
-const SHIPPING_STATUSES = ["not_shipped", "label_created", "shipped", "delivered"];
+const SHIPPING_STATUSES = [
+  "not_shipped",
+  "shipment_created",
+  "awb_assigned",
+  "pickup_requested",
+  "picked_up",
+  "in_transit",
+  "out_for_delivery",
+  "delivered",
+  "rto",
+  "cancelled",
+  "failed",
+];
 
 export default function OrderStatusForm({ order }: { order: OrderRecord }) {
   const router = useRouter();
@@ -64,7 +76,7 @@ export default function OrderStatusForm({ order }: { order: OrderRecord }) {
 
       <div className="grid sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-[12px] text-black/60 mb-1">AWB / Tracking Number</label>
+          <label className="block text-[12px] text-black/60 mb-1">AWB (manual override)</label>
           <input name="awbCode" defaultValue={order.awbCode || ""} className="w-full border border-black/20 px-3 py-2 text-[13px]" />
         </div>
         <div>

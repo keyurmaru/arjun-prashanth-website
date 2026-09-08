@@ -3,7 +3,18 @@ import type { RowDataPacket, ResultSetHeader } from "mysql2/promise";
 
 export type PaymentStatus = "pending" | "paid" | "failed" | "refunded" | "partially_refunded";
 export type OrderStatus = "pending" | "processing" | "packed" | "shipped" | "delivered" | "cancelled" | "returned";
-export type ShippingStatus = "not_shipped" | "label_created" | "shipped" | "delivered";
+export type ShippingStatus =
+  | "not_shipped"
+  | "shipment_created"
+  | "awb_assigned"
+  | "pickup_requested"
+  | "picked_up"
+  | "in_transit"
+  | "out_for_delivery"
+  | "delivered"
+  | "rto"
+  | "cancelled"
+  | "failed";
 
 export interface ShippingAddress {
   name: string;
@@ -19,6 +30,7 @@ export interface ShippingAddress {
 
 export interface ResolvedOrderItem {
   variantId: number;
+  sku: string | null;
   bookSlug: string;
   bookTitle: string;
   variantFormat: string;
@@ -44,8 +56,18 @@ export interface OrderRecord {
   currency: string;
   shiprocketOrderId: string | null;
   shiprocketShipmentId: string | null;
+  courierName: string | null;
+  courierId: string | null;
   awbCode: string | null;
+  shippingLabelUrl: string | null;
+  invoiceUrl: string | null;
   trackingUrl: string | null;
+  lastTrackingEvent: string | null;
+  shipmentCreatedAt: string | null;
+  awbAssignedAt: string | null;
+  shippedAt: string | null;
+  deliveredAt: string | null;
+  lastTrackingSyncAt: string | null;
   adminNotes: string | null;
   createdAt: string;
   items: ResolvedOrderItem[];
@@ -97,12 +119,13 @@ export async function createOrder(params: {
     for (const item of params.items) {
       await conn.execute(
         `INSERT INTO order_items
-          (order_id, variant_id, book_slug, book_title, variant_format, unit_price_paise, quantity,
+          (order_id, variant_id, sku, book_slug, book_title, variant_format, unit_price_paise, quantity,
            weight_grams, length_cm, breadth_cm, height_cm, signed, personalisation_message)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           orderId,
           item.variantId,
+          item.sku,
           item.bookSlug,
           item.bookTitle,
           item.variantFormat,
@@ -153,16 +176,90 @@ export async function markOrderFailed(razorpayOrderId: string): Promise<boolean>
   return result.affectedRows > 0;
 }
 
-export async function recordShiprocketDetails(
+export async function recordShipmentCreated(
   razorpayOrderId: string,
-  details: { shiprocketOrderId: string; shipmentId: string; awbCode?: string },
+  details: { shiprocketOrderId: string; shipmentId: string },
 ): Promise<void> {
   const pool = getPool();
   await pool.execute(
-    `UPDATE orders SET shiprocket_order_id = ?, shiprocket_shipment_id = ?, awb_code = ?, shipping_status = 'label_created'
+    `UPDATE orders SET shiprocket_order_id = ?, shiprocket_shipment_id = ?,
+       shipping_status = 'shipment_created', shipment_created_at = NOW()
      WHERE razorpay_order_id = ?`,
-    [details.shiprocketOrderId, details.shipmentId, details.awbCode || null, razorpayOrderId],
+    [details.shiprocketOrderId, details.shipmentId, razorpayOrderId],
   );
+}
+
+/** Payment stays untouched — this only flags fulfilment for a manual retry
+ * from the order's admin page (see the Shiprocket integration doc's
+ * "Critical Failure Rule": a Shiprocket failure must never fail or cancel
+ * an already-paid order). */
+export async function markShipmentFailed(orderId: number): Promise<void> {
+  const pool = getPool();
+  await pool.execute(`UPDATE orders SET shipping_status = 'failed' WHERE id = ?`, [orderId]);
+}
+
+export async function recordAwbAssigned(
+  orderId: number,
+  details: { awbCode: string; courierName: string; courierId: string },
+): Promise<void> {
+  const pool = getPool();
+  await pool.execute(
+    `UPDATE orders SET awb_code = ?, courier_name = ?, courier_id = ?,
+       shipping_status = 'awb_assigned', awb_assigned_at = NOW()
+     WHERE id = ?`,
+    [details.awbCode, details.courierName, details.courierId, orderId],
+  );
+}
+
+export async function recordPickupRequested(orderId: number): Promise<void> {
+  const pool = getPool();
+  await pool.execute(`UPDATE orders SET shipping_status = 'pickup_requested' WHERE id = ?`, [orderId]);
+}
+
+export async function recordLabelUrl(orderId: number, url: string): Promise<void> {
+  const pool = getPool();
+  await pool.execute(`UPDATE orders SET shipping_label_url = ? WHERE id = ?`, [url, orderId]);
+}
+
+export async function recordInvoiceUrl(orderId: number, url: string): Promise<void> {
+  const pool = getPool();
+  await pool.execute(`UPDATE orders SET invoice_url = ? WHERE id = ?`, [url, orderId]);
+}
+
+/** Applied from both the admin's manual "Track Shipment" action and the
+ * Shiprocket webhook. Only ever touches shipping_status and its
+ * timestamps — never payment_status or order_status, which stay under
+ * separate, explicit control (per the integration doc: shipping events
+ * must not arbitrarily overwrite payment/order state). Returns the
+ * previous shipping_status so callers can detect a real transition
+ * (e.g. to decide whether a "your order shipped" email is actually new
+ * news or a repeat webhook delivery). */
+export async function recordTrackingUpdate(
+  orderId: number,
+  update: { shippingStatus: ShippingStatus; trackingUrl?: string; lastTrackingEvent: string },
+): Promise<{ previousStatus: ShippingStatus | null }> {
+  const pool = getPool();
+  const [rows] = await pool.execute<RowDataPacket[]>(`SELECT shipping_status FROM orders WHERE id = ?`, [orderId]);
+  const previousStatus = (rows[0]?.shipping_status as ShippingStatus | undefined) || null;
+
+  const timestampColumn =
+    update.shippingStatus === "picked_up"
+      ? ", shipped_at = COALESCE(shipped_at, NOW())"
+      : update.shippingStatus === "delivered"
+        ? ", delivered_at = COALESCE(delivered_at, NOW())"
+        : "";
+
+  await pool.execute(
+    `UPDATE orders SET shipping_status = ?, last_tracking_event = ?, last_tracking_sync_at = NOW()${timestampColumn}${
+      update.trackingUrl ? ", tracking_url = ?" : ""
+    }
+     WHERE id = ?`,
+    update.trackingUrl
+      ? [update.shippingStatus, update.lastTrackingEvent, update.trackingUrl, orderId]
+      : [update.shippingStatus, update.lastTrackingEvent, orderId],
+  );
+
+  return { previousStatus };
 }
 
 export async function updateOrderAdminFields(
@@ -222,6 +319,20 @@ export async function getOrderById(id: number): Promise<OrderRecord | null> {
   return orderRows[0] ? hydrateOrder(orderRows[0]) : null;
 }
 
+export async function getOrderByShiprocketOrderId(shiprocketOrderId: string): Promise<OrderRecord | null> {
+  const pool = getPool();
+  const [orderRows] = await pool.execute<RowDataPacket[]>(`SELECT * FROM orders WHERE shiprocket_order_id = ?`, [
+    shiprocketOrderId,
+  ]);
+  return orderRows[0] ? hydrateOrder(orderRows[0]) : null;
+}
+
+export async function getOrderByAwbCode(awbCode: string): Promise<OrderRecord | null> {
+  const pool = getPool();
+  const [orderRows] = await pool.execute<RowDataPacket[]>(`SELECT * FROM orders WHERE awb_code = ?`, [awbCode]);
+  return orderRows[0] ? hydrateOrder(orderRows[0]) : null;
+}
+
 export async function listOrders(filters: OrderListFilters): Promise<{ orders: OrderRecord[]; total: number }> {
   const page = Math.max(1, filters.page || 1);
   const pageSize = Math.min(100, Math.max(1, filters.pageSize || 25));
@@ -265,6 +376,7 @@ export interface DashboardStats {
   pendingPayments: number;
   paidOrders: number;
   failedPayments: number;
+  failedShipments: number;
   revenuePaise: number;
 }
 
@@ -276,6 +388,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       SUM(CASE WHEN payment_status = 'pending' THEN 1 ELSE 0 END) as pending_payments,
       SUM(CASE WHEN payment_status = 'paid' THEN 1 ELSE 0 END) as paid_orders,
       SUM(CASE WHEN payment_status = 'failed' THEN 1 ELSE 0 END) as failed_payments,
+      SUM(CASE WHEN shipping_status = 'failed' THEN 1 ELSE 0 END) as failed_shipments,
       SUM(CASE WHEN payment_status = 'paid' THEN total_paise ELSE 0 END) as revenue_paise
      FROM orders`,
   );
@@ -285,8 +398,14 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     pendingPayments: Number(r.pending_payments || 0),
     paidOrders: Number(r.paid_orders || 0),
     failedPayments: Number(r.failed_payments || 0),
+    failedShipments: Number(r.failed_shipments || 0),
     revenuePaise: Number(r.revenue_paise || 0),
   };
+}
+
+function toIso(value: unknown): string | null {
+  if (!value) return null;
+  return value instanceof Date ? value.toISOString() : String(value);
 }
 
 async function hydrateOrder(row: RowDataPacket): Promise<OrderRecord> {
@@ -317,12 +436,23 @@ async function hydrateOrder(row: RowDataPacket): Promise<OrderRecord> {
     currency: row.currency,
     shiprocketOrderId: row.shiprocket_order_id,
     shiprocketShipmentId: row.shiprocket_shipment_id,
+    courierName: row.courier_name,
+    courierId: row.courier_id,
     awbCode: row.awb_code,
+    shippingLabelUrl: row.shipping_label_url,
+    invoiceUrl: row.invoice_url,
     trackingUrl: row.tracking_url,
+    lastTrackingEvent: row.last_tracking_event,
+    shipmentCreatedAt: toIso(row.shipment_created_at),
+    awbAssignedAt: toIso(row.awb_assigned_at),
+    shippedAt: toIso(row.shipped_at),
+    deliveredAt: toIso(row.delivered_at),
+    lastTrackingSyncAt: toIso(row.last_tracking_sync_at),
     adminNotes: row.admin_notes,
     createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : String(row.created_at),
     items: itemRows.map((r) => ({
       variantId: r.variant_id,
+      sku: r.sku,
       bookSlug: r.book_slug,
       bookTitle: r.book_title,
       variantFormat: r.variant_format,

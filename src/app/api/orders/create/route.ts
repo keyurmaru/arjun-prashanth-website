@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
 
     resolvedItems.push({
       variantId: match.variant.id,
+      sku: match.variant.sku,
       bookSlug: match.book.slug,
       bookTitle: match.book.title,
       variantFormat: match.variant.format,

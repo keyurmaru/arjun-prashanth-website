@@ -62,7 +62,13 @@ CREATE TABLE IF NOT EXISTS orders (
   -- dispatch, etc.
   payment_status ENUM('pending', 'paid', 'failed', 'refunded', 'partially_refunded') NOT NULL DEFAULT 'pending',
   order_status ENUM('pending', 'processing', 'packed', 'shipped', 'delivered', 'cancelled', 'returned') NOT NULL DEFAULT 'pending',
-  shipping_status ENUM('not_shipped', 'label_created', 'shipped', 'delivered') NOT NULL DEFAULT 'not_shipped',
+  -- Mirrors Shiprocket's own lifecycle so webhook events map onto it
+  -- directly; 'failed' is ours (Shiprocket order-creation failed — the
+  -- payment stays untouched, this is purely a fulfilment-retry signal).
+  shipping_status ENUM(
+    'not_shipped', 'shipment_created', 'awb_assigned', 'pickup_requested', 'picked_up',
+    'in_transit', 'out_for_delivery', 'delivered', 'rto', 'cancelled', 'failed'
+  ) NOT NULL DEFAULT 'not_shipped',
 
   customer_name VARCHAR(120) NOT NULL,
   email VARCHAR(200) NOT NULL,
@@ -81,8 +87,18 @@ CREATE TABLE IF NOT EXISTS orders (
 
   shiprocket_order_id VARCHAR(64) NULL,
   shiprocket_shipment_id VARCHAR(64) NULL,
+  courier_name VARCHAR(100) NULL,
+  courier_id VARCHAR(32) NULL,
   awb_code VARCHAR(64) NULL,
+  shipping_label_url VARCHAR(500) NULL,
+  invoice_url VARCHAR(500) NULL,
   tracking_url VARCHAR(300) NULL,
+  last_tracking_event VARCHAR(300) NULL,
+  shipment_created_at DATETIME NULL,
+  awb_assigned_at DATETIME NULL,
+  shipped_at DATETIME NULL,
+  delivered_at DATETIME NULL,
+  last_tracking_sync_at DATETIME NULL,
 
   admin_notes TEXT NULL,
 
@@ -94,6 +110,7 @@ CREATE TABLE IF NOT EXISTS order_items (
   id INT AUTO_INCREMENT PRIMARY KEY,
   order_id INT NOT NULL,
   variant_id INT NULL,
+  sku VARCHAR(80) NULL,
   book_slug VARCHAR(120) NOT NULL,
   book_title VARCHAR(200) NOT NULL,
   variant_format VARCHAR(60) NOT NULL,
