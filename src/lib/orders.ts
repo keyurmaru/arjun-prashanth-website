@@ -46,6 +46,8 @@ export interface OrderRecord {
   id: number;
   razorpayOrderId: string;
   razorpayPaymentId: string | null;
+  paymentMethod: string | null;
+  failureReason: string | null;
   paymentStatus: PaymentStatus;
   orderStatus: OrderStatus;
   shippingStatus: ShippingStatus;
@@ -155,23 +157,52 @@ export async function createOrder(params: {
  * time it's called for a given order (client-side verify and the webhook
  * can both race to call this for the same payment) — callers use this to
  * gate one-time-only side effects (stock deduction, Shiprocket, emails). */
-export async function markOrderPaid(razorpayOrderId: string, razorpayPaymentId: string): Promise<boolean> {
+export async function markOrderPaid(
+  razorpayOrderId: string,
+  razorpayPaymentId: string,
+  paymentMethod?: string | null,
+): Promise<boolean> {
   const pool = getPool();
   const [result] = await pool.execute<ResultSetHeader>(
-    `UPDATE orders SET payment_status = 'paid', razorpay_payment_id = ?
+    `UPDATE orders SET payment_status = 'paid', razorpay_payment_id = ?, payment_method = ?
      WHERE razorpay_order_id = ? AND payment_status = 'pending'`,
-    [razorpayPaymentId, razorpayOrderId],
+    [razorpayPaymentId, paymentMethod || null, razorpayOrderId],
   );
   return result.affectedRows > 0;
 }
 
 /** Idempotent the same way as markOrderPaid — only transitions pending -> failed. */
-export async function markOrderFailed(razorpayOrderId: string): Promise<boolean> {
+export async function markOrderFailed(razorpayOrderId: string, failureReason?: string | null): Promise<boolean> {
   const pool = getPool();
   const [result] = await pool.execute<ResultSetHeader>(
-    `UPDATE orders SET payment_status = 'failed'
+    `UPDATE orders SET payment_status = 'failed', failure_reason = ?
      WHERE razorpay_order_id = ? AND payment_status = 'pending'`,
-    [razorpayOrderId],
+    [failureReason || null, razorpayOrderId],
+  );
+  return result.affectedRows > 0;
+}
+
+/** Sets payment_method on an already-paid order without re-checking the
+ * pending->paid transition — used by the client-verify path, which fetches
+ * the method from the Razorpay API separately (Checkout.js's own success
+ * callback doesn't include it) after markOrderPaid has already run. */
+export async function recordPaymentMethod(razorpayOrderId: string, paymentMethod: string): Promise<void> {
+  const pool = getPool();
+  await pool.execute(`UPDATE orders SET payment_method = ? WHERE razorpay_order_id = ?`, [
+    paymentMethod,
+    razorpayOrderId,
+  ]);
+}
+
+/** Marks an order cancelled. If it was already paid, the caller is
+ * responsible for restoring stock first (see fulfillOrder.ts's
+ * cancelOrder, which orchestrates both) — this function only flips the
+ * status. Idempotent: a no-op if already cancelled. */
+export async function setOrderCancelled(id: number): Promise<boolean> {
+  const pool = getPool();
+  const [result] = await pool.execute<ResultSetHeader>(
+    `UPDATE orders SET order_status = 'cancelled' WHERE id = ? AND order_status != 'cancelled'`,
+    [id],
   );
   return result.affectedRows > 0;
 }
@@ -416,6 +447,8 @@ async function hydrateOrder(row: RowDataPacket): Promise<OrderRecord> {
     id: row.id,
     razorpayOrderId: row.razorpay_order_id,
     razorpayPaymentId: row.razorpay_payment_id,
+    paymentMethod: row.payment_method,
+    failureReason: row.failure_reason,
     paymentStatus: row.payment_status,
     orderStatus: row.order_status,
     shippingStatus: row.shipping_status,

@@ -4,6 +4,7 @@ import { getSession } from "@/lib/session";
 import { hasAccess } from "@/lib/auth";
 import OrderStatusForm from "@/components/admin/OrderStatusForm";
 import ShiprocketPanel from "@/components/admin/ShiprocketPanel";
+import OrderActions from "@/components/admin/OrderActions";
 
 export default async function AdminOrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -41,6 +42,10 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
           <p className="text-[12px] tracking-[0.08em] uppercase text-black/50 mb-3">Payment</p>
           <p className="text-[13px] text-black/70">Razorpay Order: {order.razorpayOrderId}</p>
           <p className="text-[13px] text-black/70">Razorpay Payment: {order.razorpayPaymentId || "—"}</p>
+          <p className="text-[13px] text-black/70">Method: {order.paymentMethod ? order.paymentMethod.toUpperCase() : "—"}</p>
+          {order.paymentStatus === "failed" && (
+            <p className="text-[13px] text-red-600 mt-1">Failed: {order.failureReason || "No reason reported by Razorpay."}</p>
+          )}
           <p className="text-[13px] text-black/70 mt-2">Subtotal: ₹{(order.subtotalPaise / 100).toFixed(2)}</p>
           <p className="text-[13px] text-black/70">Shipping: ₹{(order.shippingPaise / 100).toFixed(2)}</p>
           <p className="text-[14px] font-medium mt-1">Total: ₹{(order.totalPaise / 100).toFixed(2)}</p>
@@ -70,6 +75,9 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
 
       {canWrite ? (
         <>
+          <div className="mb-6">
+            <OrderActions order={order} />
+          </div>
           <div className="mb-6">
             <ShiprocketPanel order={order} />
           </div>

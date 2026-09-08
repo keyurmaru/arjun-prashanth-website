@@ -126,6 +126,15 @@ export async function decrementStock(variantId: number, quantity: number): Promi
   return result.affectedRows > 0;
 }
 
+/** Inverse of decrementStock — used when cancelling an already-paid order,
+ * so a cancellation doesn't permanently lose that stock. variant_id can be
+ * null on an order_items row if the variant was later deleted; callers
+ * should skip those (nothing to restore to). */
+export async function restoreStock(variantId: number, quantity: number): Promise<void> {
+  const pool = getPool();
+  await pool.execute(`UPDATE book_variants SET stock = stock + ? WHERE id = ?`, [quantity, variantId]);
+}
+
 export async function findVariantId(bookSlug: string, format: string): Promise<number | null> {
   const pool = getPool();
   const [rows] = await pool.execute<RowDataPacket[]>(

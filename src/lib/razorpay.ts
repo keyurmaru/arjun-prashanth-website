@@ -22,6 +22,20 @@ export async function createRazorpayOrder(amountPaise: number, receipt: string) 
   return order;
 }
 
+/** Fetches the payment method (card/upi/netbanking/wallet/emi) for a
+ * captured payment. Checkout.js's client-side success callback doesn't
+ * include this, so the client-verify path calls this itself; the webhook
+ * path already has it inline on the event payload. */
+export async function getPaymentMethod(paymentId: string): Promise<string | null> {
+  try {
+    const payment = await getClient().payments.fetch(paymentId);
+    return payment.method || null;
+  } catch (err) {
+    console.error(`[razorpay] Could not fetch payment ${paymentId}:`, err);
+    return null;
+  }
+}
+
 /** Verifies the signature Razorpay Checkout.js returns to the client on
  * payment success (HMAC-SHA256 of "order_id|payment_id" using the key
  * secret). This alone is not sufficient proof of payment — always treat the

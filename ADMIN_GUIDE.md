@@ -114,11 +114,20 @@ but its row and order history stay intact.
 
 `/admin/orders` — search by name/email/order number, filter by payment or
 order status, paginated. Each order detail page (`/admin/orders/[id]`)
-shows the customer, address, items (with signed/personalisation flags),
-and lets `SUPER_ADMIN`/`ORDER_MANAGER` update:
+shows the full customer record (name, email, phone, address), every item
+(with SKU/signed/personalisation flags), the Razorpay payment method
+(card/UPI/netbanking/wallet/emi) and — if the payment failed — the reason
+Razorpay reported, and lets `SUPER_ADMIN`/`ORDER_MANAGER` update:
 
+- **Mark Fulfilled / Cancel Order** — one-click buttons at the top of the
+  order page. Fulfilled sets order status to `delivered`. Cancel sets it to
+  `cancelled` and, if the order had already been paid (stock was
+  deducted), restores that stock — it does **not** trigger a Razorpay
+  refund, which stays a deliberate separate action in the Razorpay
+  dashboard.
 - **Order status**: `pending → processing → packed → shipped → delivered`,
-  or `cancelled` / `returned` — always manual, yours to control.
+  or `cancelled` / `returned` — always manual, yours to control (the two
+  buttons above are shortcuts into this same field).
 - **Shipping (Shiprocket)**: a dedicated panel on the order page with one
   button per step — Create Shipment, Assign AWB, Request Pickup, Generate
   Label, Generate Invoice, Refresh Tracking — each only shown when valid

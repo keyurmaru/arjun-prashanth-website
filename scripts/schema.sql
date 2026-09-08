@@ -101,6 +101,11 @@ CREATE TABLE IF NOT EXISTS orders (
   id INT AUTO_INCREMENT PRIMARY KEY,
   razorpay_order_id VARCHAR(64) NOT NULL UNIQUE,
   razorpay_payment_id VARCHAR(64) NULL,
+  -- e.g. "card", "upi", "netbanking", "wallet", "emi" — from Razorpay.
+  payment_method VARCHAR(30) NULL,
+  -- Human-readable reason from Razorpay's payment.failed webhook, shown to
+  -- the admin so a failed payment isn't a mystery.
+  failure_reason VARCHAR(500) NULL,
 
   -- Kept as three independent tracks rather than one status field, since a
   -- shipped order can still be refunded, a paid order can still be pending
