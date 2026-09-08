@@ -4,7 +4,7 @@ import SectionHeading from "@/components/SectionHeading";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import FilmGrid from "@/components/FilmGrid";
 import CTASection from "@/components/CTASection";
-import { films } from "@/content/films";
+import { getPublishedFilmsPublic } from "@/lib/filmsRepo";
 import { buildMetadata } from "@/lib/seo";
 
 const title = "Films";
@@ -13,7 +13,12 @@ const description =
 
 export const metadata: Metadata = buildMetadata({ title, description, path: "/films" });
 
-export default function FilmsPage() {
+// Reads from the database, only reachable from the live server — must
+// render per-request rather than being prerendered at build time.
+export const dynamic = "force-dynamic";
+
+export default async function FilmsPage() {
+  const films = await getPublishedFilmsPublic();
   return (
     <div className="bg-dark-950">
       <section className="pt-40 pb-20 lg:pb-28 border-b border-dark-800">

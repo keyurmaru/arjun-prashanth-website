@@ -6,7 +6,7 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import FilmGrid from "@/components/FilmGrid";
 import CTASection from "@/components/CTASection";
 import JsonLd from "@/components/JsonLd";
-import { films } from "@/content/films";
+import { getPublishedFilmsPublic } from "@/lib/filmsRepo";
 import { storyWorlds } from "@/content/site";
 import { buildMetadata, siteUrl } from "@/lib/seo";
 
@@ -16,7 +16,12 @@ const description =
 
 export const metadata: Metadata = buildMetadata({ title, description, path: "/director" });
 
-export default function DirectorPage() {
+// Reads films from the database, only reachable from the live server —
+// must render per-request rather than being prerendered at build time.
+export const dynamic = "force-dynamic";
+
+export default async function DirectorPage() {
+  const films = await getPublishedFilmsPublic();
   return (
     <div className="bg-dark-950">
       <JsonLd

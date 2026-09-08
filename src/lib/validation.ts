@@ -130,6 +130,33 @@ export const bookInputSchema = z.object({
 
 export type BookInputValues = z.infer<typeof bookInputSchema>;
 
+export const filmInputSchema = z.object({
+  slug: z
+    .string()
+    .trim()
+    .min(1)
+    .max(120)
+    .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "Slug must be lowercase letters, numbers, and hyphens only."),
+  title: z.string().trim().min(1).max(200),
+  projectType: z.enum(["Feature Film", "Short Film", "Direction", "Associate Direction", "Assistant Direction", "Editing"]),
+  officialRole: z.string().trim().min(1).max(150),
+  genre: z.string().trim().min(1).max(100),
+  language: z.string().trim().min(1).max(60),
+  year: z.string().trim().max(20).optional().or(z.literal("")),
+  credits: z.string().trim().min(1).max(1000),
+  synopsis: z.string().trim().max(2000).optional().or(z.literal("")),
+  trailerUrl: z.string().trim().max(300).optional().or(z.literal("")),
+  posterUrl: z.string().trim().max(300).optional().or(z.literal("")),
+  status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]),
+  featured: z.boolean(),
+  featuredOrder: z.number().int().min(0),
+  sortOrder: z.number().int(),
+  seoTitle: z.string().trim().max(200).optional().or(z.literal("")),
+  seoDescription: z.string().trim().max(300).optional().or(z.literal("")),
+});
+
+export type FilmInputValues = z.infer<typeof filmInputSchema>;
+
 export const adminUserInputSchema = z.object({
   email: z.string().trim().email().max(200),
   name: z.string().trim().min(1).max(120),

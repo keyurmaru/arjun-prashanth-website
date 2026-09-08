@@ -1,10 +1,11 @@
 # Admin Panel Guide
 
-Covers what's actually built: authentication + RBAC, the Books CMS, and
-Order management. Films, press, gallery, homepage sections, navigation,
-and SEO settings are **not** in this admin panel yet — they're still plain
-content files under `src/content/` and `src/app/`, edited by a developer.
-See "What's not in this pass" at the bottom.
+Covers what's actually built: authentication + RBAC, the Films and Books
+CMS (with a Featured system), and Order management. Editing, screenwriting,
+press, gallery, homepage sections, navigation, and SEO settings are **not**
+in this admin panel yet — they're still plain content files under
+`src/content/` and `src/app/`, edited by a developer. See "What's not in
+this pass" at the bottom.
 
 ## Logging in
 
@@ -27,12 +28,12 @@ ever get locked out.
 
 ## Roles
 
-| Role | Books | Orders | Users | Settings |
-|---|---|---|---|---|
-| `SUPER_ADMIN` | full | full | full | full |
-| `CONTENT_MANAGER` | full | — | — | — |
-| `ORDER_MANAGER` | — | full | — | — |
-| `VIEWER` | — | read-only | — | — |
+| Role | Films | Books | Orders | Users | Settings |
+|---|---|---|---|---|---|
+| `SUPER_ADMIN` | full | full | full | full | full |
+| `CONTENT_MANAGER` | full | full | — | — | — |
+| `ORDER_MANAGER` | — | — | full | — | — |
+| `VIEWER` | — | — | read-only | — | — |
 
 Enforced in `src/middleware.ts` (route-level) and again inside the order
 PATCH handler (`src/app/api/admin/orders/[id]/route.ts`) since `VIEWER` can
@@ -41,6 +42,41 @@ reach the orders pages to read but must not be able to update them.
 Manage accounts at `/admin/users` (SUPER_ADMIN only) — create, disable, or
 re-enable. You can't change your own role/status from the UI (a safeguard
 against accidentally locking yourself out).
+
+## Films
+
+`/admin/films` — list, create, edit. Each film has:
+
+- **Project Type**: `Feature Film` / `Short Film` / `Direction` /
+  `Associate Direction` / `Assistant Direction` / `Editing` — a
+  categorisation field, separate from the exact credit wording.
+- **Official Role**: the *exact* on-screen/official credit (e.g.
+  "Associate Director & Screenwriting Contribution"). Never converted to
+  "Director" automatically — if the real on-screen credit differs from
+  what's entered here, update this field to match it, don't infer.
+- **Status**: `DRAFT` (never public) → `PUBLISHED` → `ARCHIVED` (removed
+  from the public site, kept in the database).
+- **Featured** (see below) — a checkbox plus an order number.
+- **Poster image**: a path/URL, same pattern as book covers — no upload UI
+  yet.
+
+## Featured System
+
+Any published film can be marked **Featured**, with a **Featured Order**
+(lower number shows first). The homepage's "Featured Film Credits" section
+and the top of `/films` both read from this — change it in the admin, the
+public site updates immediately, no code or deploy needed
+(`getFeaturedFilmsPublic()` in `src/lib/filmsRepo.ts`).
+
+If nothing is explicitly featured, the homepage falls back to the most
+recently published films rather than showing an empty section — so an
+admin who hasn't set featured items yet doesn't end up with a broken-looking
+homepage. Explicitly featuring even one film turns that fallback off for
+that section.
+
+This same `featured` / `featured_order` pattern is meant to extend to
+Editing, Screenwriting, Press, and Gallery once those become CMS-backed —
+not built for them yet (see "What's not in this pass").
 
 ## Books
 
@@ -121,18 +157,27 @@ without ever displaying them.
    `.env.example`) wherever the app reads its runtime env from.
 3. Run the schema: `mysql -h <host> -u <user> -p <db> < scripts/schema.sql`
    (idempotent — safe to re-run).
-4. Seed the verified book catalogue: `node scripts/seed-books.mjs` (skips
-   any slug that already exists).
+4. Seed the verified catalogue: `node scripts/seed-books.mjs` and
+   `node scripts/seed-films.mjs` (both skip any slug that already exists).
 5. Create your first admin: `node scripts/seed-admin.mjs ...` (above).
 
 ## What's not in this pass
 
-This was scoped as an MVP (books + orders admin only) rather than the full
-CMS described in the original requirements doc. Still on plain content
-files, not database-backed or admin-editable:
+Films + Books are now full CMS with a Featured system; everything else
+described in the original requirements docs is still scoped for later
+passes. Still on plain content files, not database-backed or
+admin-editable:
 
-- Films, editing, screenwriting, author page copy, press, gallery,
-  homepage sections, navigation, site-wide SEO settings.
+- Editing, screenwriting, author page copy, press, gallery, homepage
+  section configuration (enable/disable, headings, item limits — the
+  homepage layout itself is fixed code, only its featured film/book
+  *content* is admin-controlled), navigation, site-wide SEO settings.
+- The Featured system exists only for Films and (implicitly, via
+  `getPublishedBooksPublic`) Books' publish status — Books don't have an
+  explicit `featured` flag yet, they all show on `/books`.
+- Per-record SEO fields exist for Films (`seoTitle`/`seoDescription`) but
+  not yet Books; no SEO health dashboard, image-SEO metadata, redirect
+  management, or social-preview UI anywhere.
 - A media upload library — cover images are pasted as a path/URL today.
 - Content workflow (scheduled publishing) — books only have the status
   enum above, no "publish at a future date" scheduling.

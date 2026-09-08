@@ -52,6 +52,31 @@ CREATE TABLE IF NOT EXISTS book_variants (
   UNIQUE KEY uniq_book_format (book_id, format)
 );
 
+CREATE TABLE IF NOT EXISTS films (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  slug VARCHAR(120) NOT NULL UNIQUE,
+  title VARCHAR(200) NOT NULL,
+  project_type ENUM('Feature Film', 'Short Film', 'Direction', 'Associate Direction', 'Assistant Direction', 'Editing') NOT NULL,
+  -- Exact on-screen/official credit wording — never auto-converted to
+  -- "Director" from Assistant/Associate Direction.
+  official_role VARCHAR(150) NOT NULL,
+  genre VARCHAR(100) NOT NULL,
+  language VARCHAR(60) NOT NULL,
+  year VARCHAR(20) NULL,
+  credits TEXT NOT NULL,
+  synopsis TEXT NULL,
+  trailer_url VARCHAR(300) NULL,
+  poster_url VARCHAR(300) NULL,
+  status ENUM('DRAFT', 'PUBLISHED', 'ARCHIVED') NOT NULL DEFAULT 'DRAFT',
+  featured TINYINT(1) NOT NULL DEFAULT 0,
+  featured_order INT NOT NULL DEFAULT 0,
+  sort_order INT NOT NULL DEFAULT 0,
+  seo_title VARCHAR(200) NULL,
+  seo_description VARCHAR(300) NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS orders (
   id INT AUTO_INCREMENT PRIMARY KEY,
   razorpay_order_id VARCHAR(64) NOT NULL UNIQUE,

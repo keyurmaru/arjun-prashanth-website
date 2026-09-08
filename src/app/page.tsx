@@ -7,7 +7,7 @@ import FilmGrid from "@/components/FilmGrid";
 import BookGrid from "@/components/BookGrid";
 import CTASection from "@/components/CTASection";
 import JsonLd from "@/components/JsonLd";
-import { films } from "@/content/films";
+import { getFeaturedFilmsPublic } from "@/lib/filmsRepo";
 import { getPublishedBooksPublic } from "@/lib/booksRepo";
 import { site, storyWorlds, aboutMilestones } from "@/content/site";
 import { buildMetadata, siteUrl } from "@/lib/seo";
@@ -24,7 +24,7 @@ export const metadata: Metadata = buildMetadata({
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const featuredFilms = films.slice(0, 4);
+  const featuredFilms = await getFeaturedFilmsPublic(4);
   const featuredBooks = await getPublishedBooksPublic();
 
   return (

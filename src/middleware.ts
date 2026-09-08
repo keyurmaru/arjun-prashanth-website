@@ -7,11 +7,13 @@ import { SESSION_COOKIE, verifySessionToken, hasAccess, ROLE_ACCESS, type AdminR
 // actual enforcement boundary, not the admin layout's nav rendering.
 const PROTECTED_PREFIXES: { prefix: string; module: keyof typeof ROLE_ACCESS }[] = [
   { prefix: "/admin/books", module: "books" },
+  { prefix: "/admin/films", module: "films" },
   { prefix: "/admin/users", module: "users" },
   { prefix: "/admin/orders", module: "orders_read" },
   { prefix: "/admin/dashboard", module: "dashboard" },
   { prefix: "/admin/settings", module: "settings" },
   { prefix: "/api/admin/books", module: "books" },
+  { prefix: "/api/admin/films", module: "films" },
   { prefix: "/api/admin/users", module: "users" },
   { prefix: "/api/admin/orders", module: "orders_read" },
   { prefix: "/api/admin/settings", module: "settings" },

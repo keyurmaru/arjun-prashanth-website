@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { films } from "@/content/films";
+import { getPublishedFilmsPublic } from "@/lib/filmsRepo";
 import { getPublishedBooksPublic } from "@/lib/booksRepo";
 import { siteUrl, isStaging } from "@/lib/seo";
 
@@ -38,6 +38,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: now,
   }));
 
+  const films = await getPublishedFilmsPublic();
   for (const film of films) {
     entries.push({ url: `${siteUrl}/films/${film.slug}`, lastModified: now });
   }

@@ -1,3 +1,8 @@
+// Historical reference only — the public site now reads films from the
+// database (see src/lib/filmsRepo.ts and scripts/seed-films.mjs, which
+// seeded this exact verified data). Nothing at runtime imports this file
+// anymore; it's kept so the original verified content isn't lost.
+
 export interface Film {
   slug: string;
   title: string;

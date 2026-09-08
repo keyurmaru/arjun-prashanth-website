@@ -1,7 +1,7 @@
-import type { Film } from "@/content/films";
+import type { FilmRecord } from "@/lib/filmsRepo";
 import FilmCard from "./FilmCard";
 
-export default function FilmGrid({ films }: { films: Film[] }) {
+export default function FilmGrid({ films }: { films: FilmRecord[] }) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 lg:gap-10">
       {films.map((film) => (
