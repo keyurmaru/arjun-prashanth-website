@@ -14,14 +14,14 @@ env:
   SSH_HOST: in-mum-web1992.main-hosting.eu
   SSH_PORT: 65002
   SSH_USER: u752714989
-  REMOTE_HB: /home/u752714989/domains/paleturquoise-sandpiper-308359.hostingersite.com/hbuilds
+  REMOTE_HB: /home/u752714989/domains/arjunprashanth.com/hbuilds
   # These are baked into the build (Next.js inlines NEXT_PUBLIC_* at build
   # time), so they're set here rather than only on the server. Flip
   # NEXT_PUBLIC_IS_STAGING to "false" and NEXT_PUBLIC_SITE_URL to the
   # production domain only when this workflow is intentionally pointed at
   # production — never as an incidental change.
-  NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL || 'https://paleturquoise-sandpiper-308359.hostingersite.com' }}
-  NEXT_PUBLIC_IS_STAGING: ${{ vars.NEXT_PUBLIC_IS_STAGING || 'true' }}
+  NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL || 'https://arjunprashanth.com' }}
+  NEXT_PUBLIC_IS_STAGING: ${{ vars.NEXT_PUBLIC_IS_STAGING || 'false' }}
 
 jobs:
   build-and-deploy:
