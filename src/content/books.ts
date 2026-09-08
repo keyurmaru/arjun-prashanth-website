@@ -1,6 +1,11 @@
 export interface BookVariant {
   format: string;
   priceINR: number;
+  /** Shipping package data for Shiprocket order creation — typical values
+   * for this format, not a precise per-copy measurement. Adjust if actual
+   * packed weight/dimensions differ. */
+  weightGrams: number;
+  dimensionsCm: { length: number; breadth: number; height: number };
 }
 
 export interface Book {
@@ -13,10 +18,6 @@ export interface Book {
   description: string[];
   discover?: string[];
   variants?: BookVariant[];
-  /** Real, currently-live purchase page — the new site does not yet have its
-   * own checkout wired to Razorpay, so "Buy Book" is honest and routes to the
-   * store that actually processes the order today. */
-  purchaseUrl?: string;
 }
 
 // Verified from the live WooCommerce catalogue (product post type + meta).
@@ -45,10 +46,9 @@ export const books: Book[] = [
       "The conflict between institutional loyalty and the pursuit of justice.",
     ],
     variants: [
-      { format: "Paperback", priceINR: 649 },
-      { format: "Hardcover", priceINR: 850 },
+      { format: "Paperback", priceINR: 649, weightGrams: 300, dimensionsCm: { length: 20, breadth: 14, height: 2 } },
+      { format: "Hardcover", priceINR: 850, weightGrams: 450, dimensionsCm: { length: 22, breadth: 15, height: 3 } },
     ],
-    purchaseUrl: "https://arjunprashanth.com/product/the-line-that-holds-hardcover-paperback/",
   },
   {
     slug: "rain-held",
@@ -66,4 +66,17 @@ export const books: Book[] = [
 
 export function getBookBySlug(slug: string): Book | undefined {
   return books.find((b) => b.slug === slug);
+}
+
+/** Server-side price/shipping lookup for a cart line item. Never trust a
+ * client-submitted price — always resolve it from this catalogue. */
+export function getPurchasableVariant(
+  bookSlug: string,
+  format: string,
+): { book: Book; variant: BookVariant } | undefined {
+  const book = getBookBySlug(bookSlug);
+  if (!book || book.status !== "published" || !book.variants) return undefined;
+  const variant = book.variants.find((v) => v.format === format);
+  if (!variant) return undefined;
+  return { book, variant };
 }

@@ -4,8 +4,9 @@ import { notFound } from "next/navigation";
 import Reveal from "@/components/Reveal";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import JsonLd from "@/components/JsonLd";
+import BookPurchaseBox from "@/components/BookPurchaseBox";
 import { books, getBookBySlug } from "@/content/books";
-import { buildMetadata } from "@/lib/seo";
+import { buildMetadata, siteUrl } from "@/lib/seo";
 
 export function generateStaticParams() {
   return books.map((b) => ({ slug: b.slug }));
@@ -40,7 +41,7 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
                   price: v.priceINR,
                   priceCurrency: "INR",
                   availability: "https://schema.org/InStock",
-                  url: book.purchaseUrl,
+                  url: `${siteUrl}/books/${book.slug}`,
                 })),
               }
             : {}),
@@ -75,20 +76,10 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
             <p className="font-inter text-[12px] tracking-[0.1em] uppercase text-bronze mt-4">{book.genre}</p>
             <p className="font-inter text-[13px] text-near-black/60 mt-1">By Arjun Prashanth</p>
 
-            {book.status === "coming-soon" ? (
+            {book.status === "coming-soon" && (
               <span className="inline-block mt-6 font-inter text-[11px] tracking-[0.16em] uppercase px-5 py-2 border border-bronze text-bronze">
                 Coming Soon
               </span>
-            ) : (
-              book.variants && (
-                <div className="flex flex-wrap gap-4 mt-6">
-                  {book.variants.map((v) => (
-                    <span key={v.format} className="font-inter text-[13px] text-near-black/80 border border-near-black/20 px-4 py-2">
-                      {v.format} — ₹{v.priceINR}
-                    </span>
-                  ))}
-                </div>
-              )
             )}
 
             <p className="font-inter text-[15px] leading-relaxed text-near-black/80 mt-8 max-w-xl">{book.excerpt}</p>
@@ -110,20 +101,7 @@ export default async function BookDetailPage({ params }: { params: Promise<{ slu
             )}
 
             <div className="mt-10">
-              {book.status === "published" && book.purchaseUrl ? (
-                <a
-                  href={book.purchaseUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block font-inter text-[11px] tracking-[0.16em] uppercase px-8 py-3.5 bg-near-black text-ivory-100 hover:bg-bronze hover:text-near-black transition-colors duration-300"
-                >
-                  Buy Book
-                </a>
-              ) : (
-                <p className="font-inter text-[12px] tracking-[0.1em] uppercase text-near-black/50">
-                  Purchase details will be available closer to release.
-                </p>
-              )}
+              <BookPurchaseBox book={book} />
             </div>
           </Reveal>
         </div>

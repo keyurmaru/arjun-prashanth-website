@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { site } from "@/content/site";
+import { useCart } from "@/context/CartContext";
 
 const primaryLinks = [
   { label: "Director", href: "/director" },
@@ -25,6 +26,7 @@ export default function Header() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const { totalItems } = useCart();
 
   // Close the mobile menu on navigation without an effect: derive it during
   // render by comparing against the previous pathname (React's documented
@@ -95,6 +97,24 @@ export default function Header() {
           </nav>
 
           <div className="flex items-center gap-3 shrink-0">
+            <Link
+              href="/cart"
+              className="relative flex items-center justify-center w-8 h-8 text-ivory-100 hover:text-bronze transition-colors duration-300"
+              aria-label={`Cart${totalItems > 0 ? ` (${totalItems} item${totalItems === 1 ? "" : "s"})` : ""}`}
+            >
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M6 6h15l-1.5 9h-12z" />
+                <path d="M6 6L4.5 3H2" />
+                <circle cx="9.5" cy="19" r="1.25" fill="currentColor" stroke="none" />
+                <circle cx="17.5" cy="19" r="1.25" fill="currentColor" stroke="none" />
+              </svg>
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-bronze text-dark-950 text-[9px] font-inter font-medium flex items-center justify-center">
+                  {totalItems}
+                </span>
+              )}
+            </Link>
+
             <Link
               href="/contact"
               className="hidden xl:block font-inter text-[10px] tracking-[0.14em] uppercase px-5 py-2 border border-bronze/70 text-bronze hover:bg-bronze hover:text-dark-950 transition-all duration-300"

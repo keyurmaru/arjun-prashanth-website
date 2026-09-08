@@ -59,3 +59,29 @@ export const screenwritingFormSchema = z.object({
 });
 
 export type ScreenwritingFormValues = z.infer<typeof screenwritingFormSchema>;
+
+export const checkoutSchema = z.object({
+  name,
+  email,
+  phone: phone,
+  line1: z.string().trim().min(5, "Please enter your full address.").max(200),
+  line2: z.string().trim().max(200).optional().or(z.literal("")),
+  city: z.string().trim().min(2).max(100),
+  state: z.string().trim().min(2).max(100),
+  pincode: z
+    .string()
+    .trim()
+    .regex(/^[1-9][0-9]{5}$/, "Please enter a valid 6-digit PIN code."),
+  country: z.string().trim().min(2).max(60).default("India"),
+  items: z
+    .array(
+      z.object({
+        bookSlug: z.string().min(1),
+        format: z.string().min(1),
+        quantity: z.number().int().min(1).max(20),
+      }),
+    )
+    .min(1, "Your cart is empty."),
+});
+
+export type CheckoutFormValues = z.infer<typeof checkoutSchema>;
