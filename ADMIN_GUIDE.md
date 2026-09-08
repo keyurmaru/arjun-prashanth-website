@@ -57,10 +57,14 @@ against accidentally locking yourself out).
 - **Status**: `DRAFT` (never public) → `PUBLISHED` → `ARCHIVED` (removed
   from the public site, kept in the database).
 - **Featured** (see below) — a checkbox plus an order number.
-- **Card image**: a single image shown on Films-page and homepage cards —
+- **Card image or video**: what's shown on Films-page and homepage cards —
   click "Select / Upload" to drag-and-drop a file or pick one already in
-  the Media Library (see below). A raw path/URL still works if you'd
-  rather paste one.
+  the Media Library (see below). This can be a **video** (MP4/WebM) as
+  well as an image: a video plays silently on loop, cropped to exactly the
+  same card size as an image would be, so mixing the two across the grid
+  never changes the layout. Social-preview (Open Graph) images can't be
+  video, so a film with a video card falls back to its first gallery still
+  for link previews. A raw path/URL still works if you'd rather paste one.
 - **Gallery**: any number of additional images (stills/BTS) for the
   detail page only, each with an optional caption. Add/remove freely.
 - **Videos**: any number of clips (Trailer/Teaser/Showreel/Behind the

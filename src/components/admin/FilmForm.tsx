@@ -157,9 +157,9 @@ export default function FilmForm({ film }: { film?: FilmRecord }) {
 
       <MediaField
         name="posterUrl"
-        label="Card image (shown on Films/homepage cards)"
+        label="Card image or video (shown on Films/homepage cards — a video plays silently on loop in the same card size)"
         defaultValue={film?.posterUrl || undefined}
-        accept="image"
+        accept="any"
       />
 
       <ListEditor

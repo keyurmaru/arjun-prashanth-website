@@ -5,7 +5,9 @@ import Reveal from "@/components/Reveal";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import CTASection from "@/components/CTASection";
 import JsonLd from "@/components/JsonLd";
+import CardMedia from "@/components/CardMedia";
 import { getFilmPublicBySlug } from "@/lib/filmsRepo";
+import { isVideoUrl } from "@/lib/media/isVideoUrl";
 import { buildMetadata } from "@/lib/seo";
 
 // Films are DB-backed and can change independently of a deploy — this page
@@ -22,7 +24,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     title: film.seoTitle || `${film.title} (${film.year ?? "Year TBC"})`,
     description: film.seoDescription || `${film.title} — ${film.officialRole}, ${film.language}. ${film.credits}`,
     path: `/films/${film.slug}`,
-    image: film.posterUrl || undefined,
+    // A video card can't be a social-preview image — fall back to the
+    // first gallery still in that case.
+    image: (isVideoUrl(film.posterUrl) ? film.gallery[0]?.imageUrl : film.posterUrl) || undefined,
   });
 }
 
@@ -81,15 +85,8 @@ export default async function FilmDetailPage({ params }: { params: Promise<{ slu
         <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-16 lg:py-20 grid lg:grid-cols-[380px_1fr] gap-14">
           <Reveal variant="left">
             {film.posterUrl ? (
-              <div className="relative aspect-[2/3] w-full max-w-sm">
-                <Image
-                  src={film.posterUrl}
-                  alt={`${film.title} — poster`}
-                  fill
-                  sizes="(min-width: 1024px) 380px, 80vw"
-                  className="object-cover"
-                  priority
-                />
+              <div className="relative aspect-[2/3] w-full max-w-sm overflow-hidden bg-dark-800">
+                <CardMedia src={film.posterUrl} alt={`${film.title} — poster`} sizes="(min-width: 1024px) 380px, 80vw" priority />
               </div>
             ) : (
               <div className="relative aspect-[2/3] w-full max-w-sm bg-dark-800 border border-dark-800 flex flex-col items-center justify-center px-6 text-center">

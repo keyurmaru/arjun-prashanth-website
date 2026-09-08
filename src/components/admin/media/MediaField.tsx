@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import MediaPickerModal from "./MediaPickerModal";
+import { isVideoUrl } from "@/lib/media/isVideoUrl";
 
 // Drop-in replacement for a plain text/URL input, for forms that read their
 // values via `new FormData(form)` at submit time (Film/Book forms) rather
@@ -16,7 +17,7 @@ export default function MediaField({
   name: string;
   label: string;
   defaultValue?: string;
-  accept: "image" | "video";
+  accept: "image" | "video" | "any";
 }) {
   const [value, setValue] = useState(defaultValue || "");
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -27,11 +28,11 @@ export default function MediaField({
       <input type="hidden" name={name} value={value} />
       <div className="flex items-center gap-3">
         {value ? (
-          accept === "image" ? (
+          isVideoUrl(value) ? (
+            <video src={value} muted playsInline preload="metadata" className="w-16 h-16 object-cover border border-black/10 bg-black" />
+          ) : (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={value.startsWith("/media-files/") ? `${value}?w=160` : value} alt="" className="w-16 h-16 object-cover border border-black/10" />
-          ) : (
-            <span className="text-[11px] text-black/50 truncate max-w-[200px] border border-black/10 px-2 py-1">{value}</span>
           )
         ) : (
           <div className="w-16 h-16 border border-dashed border-black/20 flex items-center justify-center text-[9px] text-black/30">

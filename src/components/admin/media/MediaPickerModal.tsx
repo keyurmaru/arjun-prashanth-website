@@ -10,7 +10,7 @@ export default function MediaPickerModal({
   onSelect,
   onClose,
 }: {
-  accept: "image" | "video";
+  accept: "image" | "video" | "any";
   onSelect: (media: MediaRecord) => void;
   onClose: () => void;
 }) {
@@ -20,7 +20,8 @@ export default function MediaPickerModal({
 
   async function load() {
     setLoading(true);
-    const params = new URLSearchParams({ type: accept, status: "APPROVED" });
+    const params = new URLSearchParams({ status: "APPROVED" });
+    if (accept !== "any") params.set("type", accept);
     if (search) params.set("search", search);
     const res = await fetch(`/api/admin/media?${params.toString()}`);
     const data = await res.json();
@@ -43,7 +44,9 @@ export default function MediaPickerModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-4 border-b border-black/10">
-          <p className="text-[13px] font-medium">Select {accept === "image" ? "Image" : "Video"}</p>
+          <p className="text-[13px] font-medium">
+            Select {accept === "image" ? "Image" : accept === "video" ? "Video" : "Image or Video"}
+          </p>
           <button type="button" onClick={onClose} className="text-black/50 hover:text-black text-[13px]">
             Close
           </button>
@@ -52,7 +55,7 @@ export default function MediaPickerModal({
           <UploadZone
             compact
             onUploaded={(media) => {
-              if (media.type === accept) {
+              if (accept === "any" || media.type === accept) {
                 onSelect(media);
               } else {
                 load();
