@@ -15,6 +15,11 @@ const description = "Arjun Prashanth Rao — Author. Stories that stay long afte
 
 export const metadata: Metadata = buildMetadata({ title, description, path: "/author" });
 
+// Reads a featured book from the database, only reachable from the live
+// server — must render per-request rather than being prerendered at build
+// time.
+export const dynamic = "force-dynamic";
+
 export default async function AuthorPage() {
   const featured = await getBookPublicBySlug("the-line-that-holds");
 

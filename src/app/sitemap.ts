@@ -3,6 +3,11 @@ import { films } from "@/content/films";
 import { getPublishedBooksPublic } from "@/lib/booksRepo";
 import { siteUrl, isStaging } from "@/lib/seo";
 
+// Reads books from the database, which is only reachable from the live
+// server (127.0.0.1), not the GitHub Actions build runner — must render
+// per-request rather than being prerendered at build time.
+export const dynamic = "force-dynamic";
+
 const staticRoutes = [
   "",
   "/director",

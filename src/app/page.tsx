@@ -18,6 +18,11 @@ export const metadata: Metadata = buildMetadata({
   path: "/",
 });
 
+// Reads featured books from the database, only reachable from the live
+// server — must render per-request rather than being prerendered at build
+// time on the GitHub Actions runner.
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const featuredFilms = films.slice(0, 4);
   const featuredBooks = await getPublishedBooksPublic();

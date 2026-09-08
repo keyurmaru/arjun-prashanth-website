@@ -12,6 +12,10 @@ const description = "Books by Arjun Prashanth — including the literary crime n
 
 export const metadata: Metadata = buildMetadata({ title, description, path: "/books" });
 
+// Reads from the database, only reachable from the live server — must
+// render per-request rather than being prerendered at build time.
+export const dynamic = "force-dynamic";
+
 export default async function BooksPage() {
   const books = await getPublishedBooksPublic();
   return (

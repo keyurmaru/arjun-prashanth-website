@@ -10,7 +10,9 @@ import { buildMetadata, siteUrl } from "@/lib/seo";
 
 // Books are DB-backed and can change independently of a deploy — this page
 // is intentionally dynamic (no generateStaticParams) rather than statically
-// generated at build time.
+// generated at build time, and the DB is only reachable from the live
+// server, not the GitHub Actions build runner.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
