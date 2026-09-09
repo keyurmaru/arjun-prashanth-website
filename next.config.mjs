@@ -24,25 +24,37 @@ const nextConfig = {
     // is stored as "TRUE" in hPanel), so compare case-insensitively.
     const isStaging = (process.env.NEXT_PUBLIC_IS_STAGING || "").toLowerCase() === "true";
     // Every external origin the site actually loads something from —
-    // audited directly against the source (2026-09-09), not guessed:
-    // Turnstile (contact/screenwriting forms), Razorpay (checkout.js +
-    // its own XHR calls during payment), Google Analytics (gtag.js),
-    // YouTube/Vimeo (film video embeds). next/font/google self-hosts font
-    // files at build time (served from /_next/static, same-origin), so no
-    // font-src entry is needed for it. 'unsafe-inline' on script-src is a
-    // deliberate, pragmatic tradeoff: Next.js's own hydration payload and
-    // this app's few inline <Script> blocks (GA init, Turnstile callback)
-    // are inline by default, and switching to nonce-based strict CSP is a
-    // larger, separate change — this policy still blocks the more common
-    // attack (an injected <script src="attacker.example/x.js">), just not
-    // injected inline script text.
+    // audited directly against the source AND a live checkout run
+    // (2026-09-09), not guessed: Turnstile (contact/screenwriting forms),
+    // Razorpay (checkout.js, its own risk-detection bundle from
+    // cdn.razorpay.com, and its XHR calls during payment), Google
+    // Analytics (gtag.js), YouTube/Vimeo (film video embeds). next/font/
+    // google self-hosts font files at build time (served from
+    // /_next/static, same-origin), so no font-src entry is needed for it.
+    // 'unsafe-inline' on script-src is a deliberate, pragmatic tradeoff:
+    // Next.js's own hydration payload and this app's few inline <Script>
+    // blocks (GA init, Turnstile callback) are inline by default, and
+    // switching to nonce-based strict CSP is a larger, separate change —
+    // this policy still blocks the more common attack (an injected
+    // <script src="attacker.example/x.js">), just not injected inline
+    // script text.
+    //
+    // NOTE: this header alone does NOT reach the browser in production —
+    // Hostinger's platform layer was found to silently overwrite the
+    // app's Content-Security-Policy with a bare "upgrade-insecure-
+    // requests" (every other header here passes through untouched). The
+    // actual enforced policy lives in public_html/.htaccess (a "Header
+    // always set" directive, which does take precedence) and must be kept
+    // in sync with this one by hand. This copy still matters for local
+    // dev (`next dev`/`next start`, no Apache in front) and as the source
+    // of truth to copy from.
     const csp = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://checkout.razorpay.com https://www.googletagmanager.com",
+      "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://checkout.razorpay.com https://www.googletagmanager.com https://cdn.razorpay.com",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob:",
       "font-src 'self' data:",
-      "connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://checkout.razorpay.com https://www.google-analytics.com https://analytics.google.com https://challenges.cloudflare.com",
+      "connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://checkout.razorpay.com https://cdn.razorpay.com https://www.google-analytics.com https://analytics.google.com https://challenges.cloudflare.com",
       "frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com https://api.razorpay.com https://checkout.razorpay.com https://challenges.cloudflare.com",
       "frame-ancestors 'none'",
       "base-uri 'self'",
