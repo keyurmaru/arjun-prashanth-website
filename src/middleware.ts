@@ -10,6 +10,7 @@ const PROTECTED_PREFIXES: { prefix: string; module: keyof typeof ROLE_ACCESS }[]
   { prefix: "/admin/books", module: "books" },
   { prefix: "/admin/films", module: "films" },
   { prefix: "/admin/media", module: "media" },
+  { prefix: "/admin/security", module: "security" },
   { prefix: "/admin/users", module: "users" },
   { prefix: "/admin/orders", module: "orders_read" },
   { prefix: "/admin/dashboard", module: "dashboard" },
@@ -17,6 +18,7 @@ const PROTECTED_PREFIXES: { prefix: string; module: keyof typeof ROLE_ACCESS }[]
   { prefix: "/api/admin/books", module: "books" },
   { prefix: "/api/admin/films", module: "films" },
   { prefix: "/api/admin/media", module: "media" },
+  { prefix: "/api/admin/security", module: "security" },
   { prefix: "/api/admin/users", module: "users" },
   { prefix: "/api/admin/orders", module: "orders_read" },
   { prefix: "/api/admin/settings", module: "settings" },
@@ -64,7 +66,15 @@ export async function middleware(req: NextRequest) {
   }
 
   // Everything below only ever runs for /admin/* and /api/admin/*.
-  if (pathname === "/admin/login" || pathname === "/api/admin/auth/login") {
+  // verify-2fa runs with only the short-lived pending-2FA token from
+  // login, not a real session cookie — it must bypass the session check
+  // below the same way login itself does, or the request that's supposed
+  // to complete login would be rejected as "not authenticated".
+  if (
+    pathname === "/admin/login" ||
+    pathname === "/api/admin/auth/login" ||
+    pathname === "/api/admin/auth/verify-2fa"
+  ) {
     return nextWithPathname(req, pathname);
   }
 

@@ -26,6 +26,30 @@ This is safe to re-run — it resets that email's password and guarantees
 `SUPER_ADMIN` + active, rather than erroring on a duplicate. Use it if you
 ever get locked out.
 
+### Two-factor authentication (optional, per account)
+
+`/admin/security` — every admin can turn on 2FA for their own account,
+regardless of role (it's a personal security setting, not site config).
+
+- **Enable**: scan the QR code with an authenticator app (Google
+  Authenticator, Authy, 1Password, ...), then enter the current 6-digit
+  code to confirm — this proves the scan actually worked before anything
+  is turned on, so you can't lock yourself out with a broken setup. On
+  success, you get **8 backup codes** shown exactly once — save them
+  somewhere safe (a password manager). Each works once, for when the
+  authenticator device is lost.
+- **Logging in with 2FA on**: after the normal email/password step, a
+  second screen asks for the 6-digit code (or "Use a backup code instead").
+  The intermediate token issued between the two steps expires after 5
+  minutes and is useless for anything else — it's not a session.
+- **Disable**: requires the account password *and* a current 2FA code —
+  a stolen session cookie alone can't turn this off.
+- If you ever get locked out entirely (lost device, no backup codes),
+  `scripts/seed-admin.mjs` (above) doesn't touch `totp_enabled`, so
+  resetting the password won't help — that needs a direct
+  `UPDATE admin_users SET totp_enabled = 0, totp_secret = NULL WHERE email = '...'`
+  against the database.
+
 ## Roles
 
 | Role | Films | Books | Media | Orders | Users | Settings |

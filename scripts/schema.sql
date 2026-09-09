@@ -7,11 +7,24 @@ CREATE TABLE IF NOT EXISTS admin_users (
   id INT AUTO_INCREMENT PRIMARY KEY,
   email VARCHAR(200) NOT NULL UNIQUE,
   password_hash VARCHAR(200) NOT NULL,
+  -- Optional per-account TOTP 2FA — opt-in, off by default.
+  totp_secret VARCHAR(64) NULL,
+  totp_enabled TINYINT(1) NOT NULL DEFAULT 0,
   name VARCHAR(120) NOT NULL,
   role ENUM('SUPER_ADMIN', 'CONTENT_MANAGER', 'ORDER_MANAGER', 'VIEWER') NOT NULL,
   active TINYINT(1) NOT NULL DEFAULT 1,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Single-use TOTP recovery codes, bcrypt-hashed — never stored plaintext.
+CREATE TABLE IF NOT EXISTS admin_totp_backup_codes (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  admin_user_id INT NOT NULL,
+  code_hash VARCHAR(200) NOT NULL,
+  used_at DATETIME NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (admin_user_id) REFERENCES admin_users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS books (

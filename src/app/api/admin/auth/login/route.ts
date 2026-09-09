@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPool } from "@/lib/db";
 import { verifyPassword } from "@/lib/password";
-import { createSessionToken, SESSION_COOKIE, SESSION_MAX_AGE, type AdminRole } from "@/lib/auth";
+import { createSessionToken, createPending2FAToken, SESSION_COOKIE, SESSION_MAX_AGE, type AdminRole } from "@/lib/auth";
 import { isRateLimited } from "@/lib/rateLimit";
 import type { RowDataPacket } from "mysql2";
 
@@ -37,6 +37,14 @@ export async function POST(req: NextRequest) {
   if (!user) return genericError();
   const valid = await verifyPassword(password, user.password_hash);
   if (!valid) return genericError();
+
+  if (user.totp_enabled) {
+    // Password alone isn't enough — hand back a short-lived pending token
+    // (not a session cookie) that only /api/admin/auth/verify-2fa accepts,
+    // and only for 5 minutes.
+    const pendingToken = await createPending2FAToken(user.id);
+    return NextResponse.json({ ok: true, requires2FA: true, pendingToken });
+  }
 
   const token = await createSessionToken({
     sub: user.id,
