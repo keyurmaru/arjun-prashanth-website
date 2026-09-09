@@ -3,6 +3,10 @@ export interface GalleryImage {
   alt: string;
   width: number;
   height: number;
+  // Present on images uploaded via the Media Library (/admin/media or a
+  // Film/Book form's picker) — absent on this file's static legacy set.
+  caption?: string | null;
+  category?: string | null;
 }
 
 // Real, unedited production photography supplied directly by Arjun

@@ -68,6 +68,41 @@ function hydrate(row: RowDataPacket): MediaRecord {
   };
 }
 
+export interface PublicGalleryImage {
+  id: number;
+  src: string;
+  alt: string;
+  caption: string | null;
+  width: number;
+  height: number;
+  category: string | null;
+}
+
+/** Every approved image uploaded anywhere — a film's card/gallery/video
+ * poster, a book's cover/gallery, or a direct upload straight into the
+ * Media Library — is automatically eligible here, since new uploads
+ * default to APPROVED (see the `media` table default). Nothing has to be
+ * separately "published" to the public Gallery; setting a media item's
+ * status to DRAFT or ARCHIVED in the Media Library is what excludes it. */
+export async function getPublicGalleryImages(): Promise<PublicGalleryImage[]> {
+  const pool = getPool();
+  const [rows] = await pool.execute<RowDataPacket[]>(
+    `SELECT id, storage_key, title, alt_text, caption, width, height, category, featured, featured_order, created_at
+     FROM media
+     WHERE type = 'image' AND status = 'APPROVED' AND width IS NOT NULL AND height IS NOT NULL
+     ORDER BY featured DESC, featured_order ASC, created_at DESC`,
+  );
+  return rows.map((row) => ({
+    id: row.id,
+    src: mediaUrlFor(row.storage_key),
+    alt: row.alt_text || row.title || "Gallery photograph",
+    caption: row.caption,
+    width: row.width,
+    height: row.height,
+    category: row.category,
+  }));
+}
+
 export interface CreateMediaInput {
   type: MediaType;
   storageKey: string;

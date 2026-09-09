@@ -136,6 +136,36 @@ across Films and Books rather than re-uploading the same asset per record.
   installed), so upload web-ready MP4/H.264 files directly; large/exotic
   formats should be converted before uploading.
 
+### Public Gallery — every upload appears automatically
+
+The public [/gallery](https://arjunprashanth.com/gallery) page reads
+directly from the Media Library: **every image you upload — anywhere** (a
+film's card/gallery, a book's cover/gallery, or a plain upload straight
+into `/admin/media` for something that doesn't belong to a specific film or
+book, like an event photo) — shows up there automatically. There's no
+separate "publish to gallery" step; a new upload defaults to `APPROVED`,
+and only `APPROVED` images are shown publicly.
+
+- **Caption**: whatever you type in an image's **Caption** field (Media
+  Library → click the image → Caption) appears on the public Gallery page —
+  as a hover overlay on the grid, and above the image counter when it's
+  opened full-size. Leave it blank and the image still shows, just without
+  caption text — nothing is invented on your behalf.
+- **To keep something out of the Gallery**: set its status to `DRAFT` or
+  `ARCHIVED` in the Media Library. Everything else `APPROVED` is public,
+  including images already attached to a film or book — the same photo can
+  be both a film's poster *and* appear in the general Gallery.
+- **Featured images** (the same `featured`/`featured_order` fields used
+  elsewhere) sort first in the Gallery, so you can pin specific shots to
+  the top without reordering everything else.
+- Tag an upload's **Category** field (e.g. "Film", "Event", "Press") if
+  you want to keep your own mental grouping — the Gallery page itself
+  doesn't filter by it yet, but the data's there for later.
+- The original 54 production stills that were on the Gallery page before
+  this were real, previously-verified photography kept exactly as they
+  were (`src/content/gallery.ts`) — they still show, appended after
+  whatever's in the Media Library.
+
 ## Books
 
 `/admin/books` — list, create, edit. Each book has:
@@ -232,14 +262,17 @@ without ever displaying them.
 ## What's not in this pass
 
 Films + Books are now full CMS with a Featured system, and there's a
-central Media Library; everything else described in the original
-requirements docs is still scoped for later passes. Still on plain content
-files, not database-backed or admin-editable:
+central Media Library — the public Gallery page also now pulls from it
+automatically (see above), so it's no longer purely static either. Still
+scoped for later passes. Still on plain content files, not database-backed
+or admin-editable:
 
-- Editing, screenwriting, author page copy, press, gallery, homepage
-  section configuration (enable/disable, headings, item limits — the
-  homepage layout itself is fixed code, only its featured film/book
-  *content* is admin-controlled), navigation, site-wide SEO settings.
+- Editing, screenwriting, author page copy, press, homepage section
+  configuration (enable/disable, headings, item limits — the homepage
+  layout itself is fixed code, only its featured film/book *content* is
+  admin-controlled), navigation, site-wide SEO settings. There's no
+  admin UI for the Gallery page's heading/description copy or for
+  reordering beyond the featured flag — only its *images* are dynamic.
 - The Featured system exists only for Films and (implicitly, via
   `getPublishedBooksPublic`) Books' publish status — Books don't have an
   explicit `featured` flag yet, they all show on `/books`.

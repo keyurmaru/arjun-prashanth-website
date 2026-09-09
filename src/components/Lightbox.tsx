@@ -128,9 +128,14 @@ export default function Lightbox({ images, index, onClose, onNavigate }: Lightbo
         />
       </div>
 
-      <p className="absolute bottom-6 left-1/2 -translate-x-1/2 font-inter text-[10px] tracking-[0.12em] uppercase text-ivory-100/40">
-        {index + 1} / {images.length} · Hold or double-click to zoom
-      </p>
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 max-w-xl px-6 text-center">
+        {current.caption && (
+          <p className="font-inter text-[13px] text-ivory-100/85 mb-2 leading-relaxed">{current.caption}</p>
+        )}
+        <p className="font-inter text-[10px] tracking-[0.12em] uppercase text-ivory-100/40">
+          {index + 1} / {images.length} · Hold or double-click to zoom
+        </p>
+      </div>
     </div>
   );
 }

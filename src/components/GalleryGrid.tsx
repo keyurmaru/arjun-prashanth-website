@@ -28,6 +28,11 @@ export default function GalleryGrid({ images }: { images: GalleryImage[] }) {
               loading={i < 8 ? "eager" : "lazy"}
             />
             <div className="absolute inset-0 bg-dark-950/0 group-hover:bg-dark-950/10 transition-colors duration-500" />
+            {img.caption && (
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-dark-950/85 to-transparent px-3 pt-8 pb-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                <p className="font-inter text-[11px] text-ivory-100/90 text-left leading-snug">{img.caption}</p>
+              </div>
+            )}
           </button>
         ))}
       </div>
