@@ -28,6 +28,14 @@ const nextConfig = {
       { key: "X-Frame-Options", value: "DENY" },
       { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
       { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+      // Forces browsers to only ever use HTTPS for this domain, even if a
+      // future request is somehow made over plain HTTP — no equivalent
+      // header was being sent (checked live 2026-09-09; Cloudflare, which
+      // can add this itself, was also off at the time following the DNS
+      // proxy outage). 1 year, no includeSubDomains/preload since some
+      // subdomains (mail autoconfig, DKIM CNAMEs) haven't been individually
+      // confirmed to be HTTPS-safe.
+      { key: "Strict-Transport-Security", value: "max-age=31536000" },
     ];
     // Belt-and-braces: this HTTP header blocks indexing regardless of
     // whether the per-page <meta robots> tag renders correctly or whether
