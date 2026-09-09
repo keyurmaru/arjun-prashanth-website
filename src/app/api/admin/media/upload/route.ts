@@ -7,6 +7,7 @@ import { randomUUID } from "crypto";
 import Busboy from "busboy";
 import { getSession } from "@/lib/session";
 import { hasAccess } from "@/lib/auth";
+import { isRateLimited } from "@/lib/rateLimit";
 import { detectFileType, MAX_IMAGE_BYTES, MAX_VIDEO_BYTES } from "@/lib/media/validate";
 import { readImageMeta } from "@/lib/media/imageProcessing";
 import { newStorageKey, moveFile } from "@/lib/media/storage";
@@ -25,6 +26,12 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ ok: false, error: "Not authenticated." }, { status: 401 });
   if (!hasAccess(session.role, "media")) {
     return NextResponse.json({ ok: false, error: "Forbidden." }, { status: 403 });
+  }
+  // Generous enough for a real bulk upload (one request per file — see
+  // UploadZone.tsx) while still bounding a compromised session or a
+  // runaway client retry loop from filling disk unattended.
+  if (isRateLimited(`media-upload:${session.sub}`, { max: 120, windowMs: 10 * 60 * 1000 })) {
+    return NextResponse.json({ ok: false, error: "Too many uploads. Please wait a few minutes and try again." }, { status: 429 });
   }
 
   const contentType = req.headers.get("content-type") || "";

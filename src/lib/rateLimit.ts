@@ -5,21 +5,30 @@
 // (e.g. Redis / Upstash) behind the same isAllowed() signature.
 const hits = new Map<string, number[]>();
 
-const WINDOW_MS = 10 * 60 * 1000; // 10 minutes
-const MAX_REQUESTS = 5;
+const DEFAULT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+const DEFAULT_MAX_REQUESTS = 5;
 
-export function isRateLimited(key: string): boolean {
+export interface RateLimitOptions {
+  /** Requests allowed within the window before isRateLimited() returns true. */
+  max?: number;
+  windowMs?: number;
+}
+
+export function isRateLimited(key: string, options?: RateLimitOptions): boolean {
+  const windowMs = options?.windowMs ?? DEFAULT_WINDOW_MS;
+  const max = options?.max ?? DEFAULT_MAX_REQUESTS;
+
   const now = Date.now();
-  const timestamps = (hits.get(key) ?? []).filter((t) => now - t < WINDOW_MS);
+  const timestamps = (hits.get(key) ?? []).filter((t) => now - t < windowMs);
   timestamps.push(now);
   hits.set(key, timestamps);
 
   // Opportunistic cleanup so the map doesn't grow unbounded.
   if (hits.size > 5000) {
     for (const [k, v] of hits) {
-      if (v.every((t) => now - t >= WINDOW_MS)) hits.delete(k);
+      if (v.every((t) => now - t >= windowMs)) hits.delete(k);
     }
   }
 
-  return timestamps.length > MAX_REQUESTS;
+  return timestamps.length > max;
 }

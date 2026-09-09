@@ -41,3 +41,24 @@ actually send email: `SMTP_HOST`, `SMTP_USER`, `SMTP_PASSWORD`. Optional:
 Cloudflare Turnstile keys (spam protection — falls back to
 honeypot+timing+rate-limit if unset), Razorpay/Shiprocket keys (not yet
 wired into checkout — do not claim live payment/shipping until they are).
+
+## Bot/abuse protection (in our own code, not just Cloudflare)
+
+`src/lib/rateLimit.ts` is a process-local in-memory sliding-window limiter
+(`isRateLimited(key, { max, windowMs })`, defaults 5 req/10min). Applied
+per-route on sensitive public endpoints (contact, screenwriting enquiry,
+notify-me, order create, admin login) and, since 2026-09, per-user on the
+media upload endpoint. `src/middleware.ts` additionally applies a generous
+60 req/min-per-IP backstop to every `/api/*` route that isn't `/api/admin/*`
+or `/api/webhooks/*` — the former already has its own session/RBAC gate,
+the latter must never be blocked since Razorpay/Shiprocket verify their own
+signatures and don't retry gracefully forever.
+
+Deliberately does **not** rate-limit page loads (`/`, `/films`, `/books`,
+...) — a shared corporate/mobile-carrier IP or a legitimate traffic spike
+hitting an app-level page limiter is exactly the kind of self-inflicted
+outage this site had from an external Cloudflare rate-limiting rule
+(2026-09-09); don't reintroduce that failure mode in our own code. If
+tighter bot defense is ever needed for page views specifically, it belongs
+in a carefully-scoped, well-tested Cloudflare rule (with alerting), not a
+blanket in-app limiter.
