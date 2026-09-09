@@ -23,11 +23,40 @@ const nextConfig = {
     // Hosting-panel env var UIs don't always preserve exact casing (this one
     // is stored as "TRUE" in hPanel), so compare case-insensitively.
     const isStaging = (process.env.NEXT_PUBLIC_IS_STAGING || "").toLowerCase() === "true";
+    // Every external origin the site actually loads something from —
+    // audited directly against the source (2026-09-09), not guessed:
+    // Turnstile (contact/screenwriting forms), Razorpay (checkout.js +
+    // its own XHR calls during payment), Google Analytics (gtag.js),
+    // YouTube/Vimeo (film video embeds). next/font/google self-hosts font
+    // files at build time (served from /_next/static, same-origin), so no
+    // font-src entry is needed for it. 'unsafe-inline' on script-src is a
+    // deliberate, pragmatic tradeoff: Next.js's own hydration payload and
+    // this app's few inline <Script> blocks (GA init, Turnstile callback)
+    // are inline by default, and switching to nonce-based strict CSP is a
+    // larger, separate change — this policy still blocks the more common
+    // attack (an injected <script src="attacker.example/x.js">), just not
+    // injected inline script text.
+    const csp = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://checkout.razorpay.com https://www.googletagmanager.com",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob:",
+      "font-src 'self' data:",
+      "connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://checkout.razorpay.com https://www.google-analytics.com https://analytics.google.com https://challenges.cloudflare.com",
+      "frame-src 'self' https://www.youtube-nocookie.com https://player.vimeo.com https://api.razorpay.com https://checkout.razorpay.com https://challenges.cloudflare.com",
+      "frame-ancestors 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "object-src 'none'",
+      "upgrade-insecure-requests",
+    ].join("; ");
+
     const securityHeaders = [
       { key: "X-Content-Type-Options", value: "nosniff" },
       { key: "X-Frame-Options", value: "DENY" },
       { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
       { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+      { key: "Content-Security-Policy", value: csp },
       // Forces browsers to only ever use HTTPS for this domain, even if a
       // future request is somehow made over plain HTTP — no equivalent
       // header was being sent (checked live 2026-09-09; Cloudflare, which
