@@ -16,7 +16,7 @@ export default function RefundCancellationPage() {
           <h1 className="apr-h1" style={{ fontSize: "clamp(2rem,4vw,2.6rem)" }}>
             Refund &amp; Cancellation Policy
           </h1>
-          <p className="apr-legal-meta">Last updated: 31 August 2026 · Applies to book orders placed on arjunprashanth.com.</p>
+          <p className="apr-legal-meta">Last updated: 14 September 2026 · Applies to book orders placed on arjunprashanth.com.</p>
 
           <p className="apr-body">We want you to be satisfied with your order. This policy explains how order cancellations, returns and refunds are handled.</p>
 
@@ -26,16 +26,16 @@ export default function RefundCancellationPage() {
             <li>Once an order has been shipped, it can no longer be cancelled and instead follows the return process below.</li>
           </ul>
 
-          <h2 className="apr-h2">2. Returns and refunds</h2>
-          <p className="apr-body">We accept returns and issue a refund or replacement if:</p>
+          <h2 className="apr-h2">2. Eligible returns</h2>
+          <p className="apr-body">We accept returns and issue a refund or replacement — your choice — if:</p>
           <ul className="apr-legal-list">
-            <li>The book arrives damaged or defective, or</li>
+            <li>The book arrives damaged or defective (printing, binding or physical damage in transit), or</li>
             <li>You received the wrong item</li>
           </ul>
           <p className="apr-body">
             Return requests must be made within <strong>7 days of delivery</strong>, by emailing us with your order
-            number and a photo of the issue where applicable. Change-of-mind returns are not accepted once an order
-            has shipped.
+            number and a photo of the issue. Change-of-mind returns are not accepted once an order has shipped, in
+            line with standard practice for books once they leave our care.
           </p>
 
           <h3 className="apr-h3">Personalised / signed copies</h3>
@@ -44,14 +44,30 @@ export default function RefundCancellationPage() {
             only be returned if it arrives damaged or defective — personalisation itself is non-returnable.
           </p>
 
-          <h2 className="apr-h2">3. Refund process and timeline</h2>
+          <h3 className="apr-h3">Non-returnable condition</h3>
           <p className="apr-body">
-            Once a return is approved and the item is received back (where applicable), we will process your refund
-            to the original payment method via Razorpay. Refunds are typically credited within{" "}
-            <strong>7–10 business days</strong>, though the exact timing can depend on your bank or payment provider.
+            To qualify for a return, the book must be in the condition it arrived in — this policy exists to cover
+            our error or damage in transit, not damage that occurred after delivery. We may ask you to send a photo
+            before approving a return, and reserve the right to decline a return that does not meet this condition.
           </p>
 
-          <h2 className="apr-h2">4. How to request a refund or cancellation</h2>
+          <h2 className="apr-h2">3. Return shipping</h2>
+          <p className="apr-body">
+            For an approved return, we will either arrange a reverse pickup where our courier partner supports it in
+            your area, or ask you to ship the item back to us via a reliable courier. Where you arrange the shipment
+            yourself, we will reimburse reasonable return shipping costs alongside your refund — keep your shipping
+            receipt to claim this.
+          </p>
+
+          <h2 className="apr-h2">4. Refund process and timeline</h2>
+          <p className="apr-body">
+            Once a return is approved (and the item received back, where applicable), we will process your refund to
+            the original payment method via Razorpay. Refunds are typically credited within{" "}
+            <strong>7–10 business days</strong> of approval, though the exact timing can depend on your bank or
+            payment provider. Order cancellations made before shipping are refunded in full on the same basis.
+          </p>
+
+          <h2 className="apr-h2">5. How to request a refund or cancellation</h2>
           <p className="apr-body">
             Email <a href="mailto:author@arjunprashanth.com">author@arjunprashanth.com</a> with your order number and
             the reason for your request. We aim to respond within 2 business days.
