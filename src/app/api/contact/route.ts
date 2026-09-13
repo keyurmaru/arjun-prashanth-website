@@ -39,7 +39,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Spam check failed. Please try again." }, { status: 400 });
   }
 
-  const to = process.env.CONTACT_FORM_TO_EMAIL || site.email;
+  // Route by enquiry type rather than making the visitor pick an address —
+  // publishing/literary enquiries go to the author inbox, everything else
+  // (film, screenwriting, editing, media, speaking, rights, general) to the
+  // filmmaker inbox. Explicit env overrides still win if set.
+  const to =
+    data.enquiryType === "Publishing / Literary"
+      ? process.env.PUBLISHING_FORM_TO_EMAIL || site.legalEmail
+      : process.env.CONTACT_FORM_TO_EMAIL || site.email;
   const text = [
     `New contact enquiry from arjunprashanth.com`,
     ``,

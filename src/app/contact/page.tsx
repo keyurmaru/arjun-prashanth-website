@@ -53,17 +53,6 @@ export default function ContactPage() {
                   {site.email}
                 </a>
               </div>
-              <div>
-                <p className="font-inter text-[10px] tracking-[0.14em] uppercase text-muted">WhatsApp</p>
-                <a
-                  href={site.whatsappHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-cormorant text-xl text-ivory-100 hover:text-bronze transition-colors"
-                >
-                  {site.whatsapp}
-                </a>
-              </div>
             </div>
           </Reveal>
 

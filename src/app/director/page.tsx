@@ -110,7 +110,7 @@ export default async function DirectorPage() {
         <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-20 lg:py-28">
           <Reveal>
             <div className="flex flex-wrap items-end justify-between gap-6 mb-14">
-              <SectionHeading eyebrow="Selected Work" title="Director & Assistant Director Credits" />
+              <SectionHeading eyebrow="Selected Work" title="Selected Film Credits" />
               <Link href="/films" className="font-inter text-[11px] tracking-[0.16em] uppercase text-bronze hover:text-bronze-light transition-colors">
                 View All Films →
               </Link>

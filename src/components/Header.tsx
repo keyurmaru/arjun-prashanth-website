@@ -10,14 +10,19 @@ const primaryLinks = [
   { label: "Director", href: "/director" },
   { label: "Films", href: "/films" },
   { label: "Screenwriting", href: "/screenwriting" },
-  { label: "Editing", href: "/editing" },
   { label: "Author", href: "/author" },
   { label: "Books", href: "/books" },
   { label: "About", href: "/about" },
-  { label: "Press", href: "/press" },
 ];
 
+// Editing and Press are real pages (still reachable via the footer and
+// mobile menu) but currently have no production content of their own yet
+// — de-emphasized out of the primary desktop nav rather than presented
+// alongside finished sections. Promote back to primaryLinks once either
+// has real content.
 const mobileExtras = [
+  { label: "Editing", href: "/editing" },
+  { label: "Press", href: "/press" },
   { label: "Gallery", href: "/gallery" },
   { label: "Contact", href: "/contact" },
 ];

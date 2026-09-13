@@ -38,6 +38,12 @@ export default function PrivacyPolicyPage() {
             email, phone number, delivery address, and order details. Payment is processed by Razorpay (see Section
             3) — we do not receive or store your full card, UPI or banking details.
           </p>
+          <h3 className="apr-h3">Notify Me</h3>
+          <p className="apr-body">
+            If a book is not yet available and you use the &ldquo;Notify Me&rdquo; option, we store your email address
+            solely to email you when that book becomes available. To be removed from this list before that email is
+            sent, contact us at the address in Section 9.
+          </p>
           <h3 className="apr-h3">Automatically collected information</h3>
           <p className="apr-body">
             Like most websites, our server and security/performance services automatically log standard technical
@@ -63,30 +69,32 @@ export default function PrivacyPolicyPage() {
               and stores your payment details directly; we never see or store your full card/UPI credentials.
             </li>
             <li>
-              <strong>Cloudflare Turnstile</strong> — used on our contact form to distinguish real visitors from
-              automated bots/spam. Turnstile may process your IP address and browser signals as part of this check.
-            </li>
-            <li><strong>WooCommerce</strong> — the store platform that manages carts, orders and checkout on this Site.</li>
-            <li>
-              <strong>Google Fonts</strong> — typefaces used on this Site are loaded from Google&rsquo;s font
-              servers, which may receive your IP address as part of that request.
+              <strong>Shiprocket</strong> — once your order ships, your name, address and phone number are shared
+              with Shiprocket and the courier it assigns solely to deliver your order and provide tracking updates.
             </li>
             <li>
-              <strong>Shipping/courier partner</strong> — once your order ships, your name, address and phone number
-              are shared with our shipping/courier partner solely to deliver your order.
+              <strong>Google Analytics</strong> — we use Google Analytics to understand how visitors use the Site
+              (pages viewed, general location, device type). This involves cookies and processing of your IP address
+              by Google; see Google&rsquo;s own privacy policy for how it handles this data.
+            </li>
+            <li>
+              <strong>Spam/bot protection</strong> — our forms are protected by server-side checks (a hidden field
+              and submission-timing check) and rate-limiting. We may additionally enable Cloudflare Turnstile, a
+              bot-detection challenge that can process your IP address and browser signals, on some forms.
             </li>
           </ul>
           <p className="apr-body">
-            We may add analytics tools such as Google Analytics or Google Search Console in the future to understand
-            how visitors use the Site; if enabled, this section will be updated to reflect that.
+            Website fonts are served directly from our own server (not fetched from Google at page-load time), so no
+            font-related request reaches Google when you browse this Site.
           </p>
 
-          <h2 className="apr-h2">4. Cookies</h2>
+          <h2 className="apr-h2">4. Cookies and local storage</h2>
           <p className="apr-body">
-            This Site uses a limited number of cookies required for the store, security and performance to function:
-            WooCommerce cart/session cookies, a spam-protection cookie set by Cloudflare Turnstile on the contact
-            form, and caching cookies used only to speed up page delivery for logged-in/administrative use. We do not
-            use third-party advertising or cross-site tracking cookies.
+            Your shopping cart is stored in your browser&rsquo;s local storage, not a cookie, and never leaves your
+            device until you check out. This Site sets a small number of cookies: a security cookie for our admin
+            login (relevant only to site staff, not visitors), and — where enabled — cookies set by Google Analytics
+            and/or Cloudflare Turnstile as described above. We do not use third-party advertising or cross-site
+            tracking cookies.
           </p>
 
           <h2 className="apr-h2">5. Data retention</h2>

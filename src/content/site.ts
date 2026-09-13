@@ -7,8 +7,6 @@ export const site = {
   // re-verifying against the production Contact page.
   email: "filmmaker@arjunprashanth.com",
   legalEmail: "author@arjunprashanth.com",
-  whatsapp: "+91 7353055130",
-  whatsappHref: "https://wa.me/917353055130",
   instagram: "https://instagram.com/thearjunprao",
   productionUrl: "https://arjunprashanth.com",
 } as const;
@@ -23,11 +21,9 @@ export const primaryNav: NavItem[] = [
   { label: "Director", href: "/director" },
   { label: "Films", href: "/films" },
   { label: "Screenwriting", href: "/screenwriting" },
-  { label: "Editing", href: "/editing" },
   { label: "Author", href: "/author" },
   { label: "Books", href: "/books" },
   { label: "About", href: "/about" },
-  { label: "Press", href: "/press" },
   { label: "Contact", href: "/contact" },
 ];
 

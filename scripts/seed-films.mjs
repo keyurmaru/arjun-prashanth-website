@@ -94,7 +94,7 @@ const films = [
   },
   {
     slug: "ustad-bhagat-singh",
-    title: "Ustad Bhagat Singh",
+    title: "Ustaad Bhagat Singh",
     projectType: "Associate Direction",
     officialRole: "Associate Director & Screenwriting Contribution",
     genre: "Commercial Action Drama",

@@ -76,7 +76,7 @@ export const films: Film[] = [
   },
   {
     slug: "ustad-bhagat-singh",
-    title: "Ustad Bhagat Singh",
+    title: "Ustaad Bhagat Singh",
     role: "Associate Director & Screenwriting Contribution",
     genre: "Commercial Action Drama",
     language: "Telugu",
