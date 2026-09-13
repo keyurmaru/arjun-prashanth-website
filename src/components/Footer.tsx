@@ -47,6 +47,22 @@ export default function Footer() {
               >
                 Instagram
               </a>
+              <a
+                href={site.imdb}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-inter text-[10px] tracking-[0.12em] uppercase text-muted hover:text-bronze transition-colors"
+              >
+                IMDb
+              </a>
+              <a
+                href={site.linkedin}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-inter text-[10px] tracking-[0.12em] uppercase text-muted hover:text-bronze transition-colors"
+              >
+                LinkedIn
+              </a>
             </div>
           </div>
 

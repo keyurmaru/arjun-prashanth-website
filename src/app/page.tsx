@@ -36,7 +36,7 @@ export default async function HomePage() {
           name: site.name,
           jobTitle: ["Film Director", "Screenwriter", "Editor", "Author"],
           url: siteUrl,
-          sameAs: [site.instagram],
+          sameAs: [site.instagram, site.imdb, site.linkedin],
         }}
       />
 

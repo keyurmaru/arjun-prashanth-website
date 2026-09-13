@@ -8,6 +8,8 @@ export const site = {
   email: "filmmaker@arjunprashanth.com",
   legalEmail: "author@arjunprashanth.com",
   instagram: "https://instagram.com/thearjunprao",
+  imdb: "https://www.imdb.com/user/p.p2jin7ghb7jumfdiwwu3iv7kji?ref_=ext_shr_lnk",
+  linkedin: "https://www.linkedin.com/in/arjun-prashanth-656221435?utm_source=share_via&utm_content=profile&utm_medium=member_ios",
   productionUrl: "https://arjunprashanth.com",
 } as const;
 
