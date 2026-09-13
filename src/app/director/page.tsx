@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import Reveal from "@/components/Reveal";
 import SectionHeading from "@/components/SectionHeading";
@@ -9,6 +10,10 @@ import JsonLd from "@/components/JsonLd";
 import { getPublishedFilmsPublic } from "@/lib/filmsRepo";
 import { storyWorlds } from "@/content/site";
 import { buildMetadata, siteUrl } from "@/lib/seo";
+
+// Supplied directly by Arjun Prashanth, uploaded via the Media Library
+// (media id 8) — 2026-09-13.
+const directorPortraitUrl = "/media-files/2026/09/7c869964-8dae-473e-8d65-5f0325ae6572.jpg";
 
 const title = "Director";
 const description =
@@ -52,6 +57,16 @@ export default async function DirectorPage() {
         <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-20 lg:py-28 grid lg:grid-cols-[1fr_1.1fr] gap-14">
           <Reveal variant="left">
             <p className="font-inter text-[11px] tracking-[0.16em] uppercase text-bronze mb-4">Background</p>
+            <div className="relative aspect-[3/4] w-full max-w-sm bg-dark-800 border border-dark-800">
+              <Image
+                src={directorPortraitUrl}
+                alt="Arjun Prashanth, film director"
+                fill
+                sizes="(min-width: 1024px) 40vw, 90vw"
+                className="object-cover"
+                priority
+              />
+            </div>
           </Reveal>
           <Reveal delay={80}>
             <div className="font-inter text-[15px] leading-relaxed text-muted space-y-5">
