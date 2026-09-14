@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import Reveal from "@/components/Reveal";
 import SectionHeading from "@/components/SectionHeading";
 import Breadcrumbs from "@/components/Breadcrumbs";
@@ -12,6 +13,13 @@ const description =
   "Arjun Prashanth is a film director, screenwriter and author whose work is rooted in character, emotional conflict and cinematic storytelling.";
 
 export const metadata: Metadata = buildMetadata({ title, description, path: "/about" });
+
+// Supplied directly by Arjun Prashanth, uploaded via the Media Library —
+// 2026-09-14.
+const aboutPhotos = [
+  "/media-files/2026/09/8c8800b6-a79a-4777-a6e1-ae44fc0d35cf.jpg",
+  "/media-files/2026/09/258bab83-1756-4ae3-bf91-e33815be2111.jpg",
+];
 
 export default function AboutPage() {
   return (
@@ -26,9 +34,18 @@ export default function AboutPage() {
       </section>
 
       <section className="border-b border-dark-800">
-        <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-20 lg:py-28">
-          <Reveal>
-            <div className="font-inter text-[15px] leading-relaxed text-muted max-w-2xl space-y-5">
+        <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-20 lg:py-28 grid lg:grid-cols-[1fr_1.1fr] gap-14">
+          <Reveal variant="left">
+            <div className="grid grid-cols-2 gap-4 max-w-sm">
+              {aboutPhotos.map((src) => (
+                <div key={src} className="relative aspect-[3/4] w-full bg-dark-800 border border-dark-800">
+                  <Image src={src} alt="Arjun Prashanth" fill sizes="(min-width: 1024px) 20vw, 45vw" className="object-cover" />
+                </div>
+              ))}
+            </div>
+          </Reveal>
+          <Reveal delay={80}>
+            <div className="font-inter text-[15px] leading-relaxed text-muted space-y-5">
               <p>
                 Arjun Prashanth is a film director, screenwriter and author whose work is rooted in character,
                 emotional conflict and cinematic storytelling.

@@ -15,6 +15,10 @@ const description = "Arjun Prashanth — Author. Stories that stay long after th
 
 export const metadata: Metadata = buildMetadata({ title, description, path: "/author" });
 
+// Supplied directly by Arjun Prashanth, uploaded via the Media Library —
+// 2026-09-14.
+const authorPortraitUrl = "/media-files/2026/09/ea2fc203-0e8d-472f-baa1-38bc328d8cd4.jpg";
+
 // Reads a featured book from the database, only reachable from the live
 // server — must render per-request rather than being prerendered at build
 // time.
@@ -45,9 +49,14 @@ export default async function AuthorPage() {
       </section>
 
       <section className="border-b border-dark-800">
-        <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-20 lg:py-28">
-          <Reveal>
-            <div className="font-inter text-[15px] leading-relaxed text-muted max-w-2xl space-y-5">
+        <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-20 lg:py-28 grid lg:grid-cols-[1fr_1.1fr] gap-14">
+          <Reveal variant="left">
+            <div className="relative aspect-[3/4] w-full max-w-sm bg-dark-800 border border-dark-800">
+              <Image src={authorPortraitUrl} alt="Arjun Prashanth, author" fill sizes="(min-width: 1024px) 40vw, 90vw" className="object-cover" />
+            </div>
+          </Reveal>
+          <Reveal delay={80}>
+            <div className="font-inter text-[15px] leading-relaxed text-muted space-y-5">
               <p>
                 Arjun Prashanth became an author because not every story he imagined belonged on a film set. Over
                 years of writing for cinema, he accumulated ideas, characters and emotional worlds that demanded a
