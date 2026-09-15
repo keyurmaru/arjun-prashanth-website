@@ -56,7 +56,6 @@ export default async function DirectorPage() {
       <section className="border-b border-dark-800">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-20 lg:py-28 grid lg:grid-cols-[1fr_1.1fr] gap-14">
           <Reveal variant="left">
-            <p className="font-inter text-[11px] tracking-[0.16em] uppercase text-bronze mb-4">Background</p>
             <div className="relative aspect-[3/4] w-full max-w-sm bg-dark-800 border border-dark-800">
               <Image
                 src={directorPortraitUrl}

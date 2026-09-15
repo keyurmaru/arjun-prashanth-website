@@ -16,10 +16,7 @@ export const metadata: Metadata = buildMetadata({ title, description, path: "/ab
 
 // Supplied directly by Arjun Prashanth, uploaded via the Media Library —
 // 2026-09-14.
-const aboutPhotos = [
-  "/media-files/2026/09/8c8800b6-a79a-4777-a6e1-ae44fc0d35cf.jpg",
-  "/media-files/2026/09/258bab83-1756-4ae3-bf91-e33815be2111.jpg",
-];
+const aboutPhotoUrl = "/media-files/2026/09/8c8800b6-a79a-4777-a6e1-ae44fc0d35cf.jpg";
 
 export default function AboutPage() {
   return (
@@ -36,12 +33,8 @@ export default function AboutPage() {
       <section className="border-b border-dark-800">
         <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-20 lg:py-28 grid lg:grid-cols-[1fr_1.1fr] gap-14">
           <Reveal variant="left">
-            <div className="grid grid-cols-2 gap-4 max-w-sm">
-              {aboutPhotos.map((src) => (
-                <div key={src} className="relative aspect-[3/4] w-full bg-dark-800 border border-dark-800">
-                  <Image src={src} alt="Arjun Prashanth" fill sizes="(min-width: 1024px) 20vw, 45vw" className="object-cover" />
-                </div>
-              ))}
+            <div className="relative aspect-[3/4] w-full max-w-sm bg-dark-800 border border-dark-800">
+              <Image src={aboutPhotoUrl} alt="Arjun Prashanth" fill sizes="(min-width: 1024px) 40vw, 90vw" className="object-cover" />
             </div>
           </Reveal>
           <Reveal delay={80}>
