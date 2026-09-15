@@ -3,6 +3,7 @@ import { screenwritingFormSchema } from "@/lib/validation";
 import { looksLikeSpam, verifyTurnstile } from "@/lib/spam";
 import { isRateLimited, isBypassedIp } from "@/lib/rateLimit";
 import { sendMail } from "@/lib/mailer";
+import { screenwritingEnquiryEmail } from "@/lib/email/templates";
 import { site } from "@/content/site";
 
 export async function POST(req: NextRequest) {
@@ -39,25 +40,8 @@ export async function POST(req: NextRequest) {
   }
 
   const to = process.env.SCREENWRITING_FORM_TO_EMAIL || site.email;
-  const text = [
-    `New screenwriting enquiry from arjunprashanth.com`,
-    ``,
-    `Full name: ${data.fullName}`,
-    `Company / Production House: ${data.companyProductionHouse || "—"}`,
-    `Role / Designation: ${data.roleDesignation || "—"}`,
-    `Mobile: ${data.mobileNumber}`,
-    `Email: ${data.email}`,
-    `Preferred contact: ${data.preferredContact}`,
-    `Project format: ${data.projectFormat}`,
-    `Genre: ${data.genre}`,
-    `Language: ${data.language || "—"}`,
-    `Expected timeline: ${data.expectedTimeline || "—"}`,
-    ``,
-    `Short concept / logline:`,
-    data.logline,
-  ].join("\n");
-
-  const sent = await sendMail({ to, subject: `[Screenwriting Enquiry] ${data.fullName}`, text, replyTo: data.email });
+  const email = screenwritingEnquiryEmail(data);
+  const sent = await sendMail({ to, subject: email.subject, text: email.text, html: email.html, replyTo: data.email });
 
   return NextResponse.json({ ok: true, delivered: sent });
 }

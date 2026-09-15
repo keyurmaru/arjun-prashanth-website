@@ -3,6 +3,7 @@ import { contactFormSchema } from "@/lib/validation";
 import { looksLikeSpam, verifyTurnstile } from "@/lib/spam";
 import { isRateLimited, isBypassedIp } from "@/lib/rateLimit";
 import { sendMail } from "@/lib/mailer";
+import { contactEnquiryEmail } from "@/lib/email/templates";
 import { site } from "@/content/site";
 
 export async function POST(req: NextRequest) {
@@ -47,20 +48,15 @@ export async function POST(req: NextRequest) {
     data.enquiryType === "Publishing / Literary"
       ? process.env.PUBLISHING_FORM_TO_EMAIL || site.legalEmail
       : process.env.CONTACT_FORM_TO_EMAIL || site.email;
-  const text = [
-    `New contact enquiry from arjunprashanth.com`,
-    ``,
-    `Name: ${data.name}`,
-    `Email: ${data.email}`,
-    `Phone: ${data.phone || "—"}`,
-    `Enquiry type: ${data.enquiryType}`,
-    `Subject: ${data.subject}`,
-    ``,
-    `Message:`,
-    data.message,
-  ].join("\n");
-
-  const sent = await sendMail({ to, subject: `[Contact] ${data.subject}`, text, replyTo: data.email });
+  const email = contactEnquiryEmail({
+    name: data.name,
+    email: data.email,
+    phone: data.phone,
+    enquiryType: data.enquiryType,
+    subject: data.subject,
+    message: data.message,
+  });
+  const sent = await sendMail({ to, subject: email.subject, text: email.text, html: email.html, replyTo: data.email });
 
   return NextResponse.json({ ok: true, delivered: sent });
 }

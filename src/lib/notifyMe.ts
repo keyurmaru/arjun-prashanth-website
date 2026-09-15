@@ -1,7 +1,7 @@
 import { getPool } from "@/lib/db";
 import type { RowDataPacket } from "mysql2/promise";
 import { sendMail } from "@/lib/mailer";
-import { site } from "@/content/site";
+import { bookAvailableEmail } from "@/lib/email/templates";
 import { siteUrl } from "@/lib/seo";
 
 /** Emails everyone who signed up for "Notify Me" on this book, then clears
@@ -16,17 +16,11 @@ export async function notifyBookAvailable(bookId: number, bookTitle: string, boo
   if (rows.length === 0) return;
 
   const url = `${siteUrl}/books/${bookSlug}`;
-  const text = [
-    `Good news — "${bookTitle}" is now available to order.`,
-    ``,
-    url,
-    ``,
-    `— ${site.name}`,
-  ].join("\n");
+  const email = bookAvailableEmail(bookTitle, url);
 
   for (const row of rows) {
     try {
-      await sendMail({ to: row.email, subject: `${bookTitle} is now available`, text });
+      await sendMail({ to: row.email, subject: email.subject, text: email.text, html: email.html });
     } catch (err) {
       console.error(`[notifyMe] Failed to notify ${row.email} for book #${bookId}:`, err);
     }

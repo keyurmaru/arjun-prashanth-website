@@ -20,6 +20,9 @@ interface SendMailInput {
   to: string;
   subject: string;
   text: string;
+  /** Branded HTML version — every template in src/lib/email/templates.ts
+   * provides one. Optional so ad-hoc plain-text sends still work. */
+  html?: string;
   replyTo?: string;
 }
 
@@ -27,7 +30,7 @@ interface SendMailInput {
  * caller) when SMTP isn't configured yet, so the API route can still
  * acknowledge the enquiry was received and logged, without claiming an
  * email was sent that wasn't. */
-export async function sendMail({ to, subject, text, replyTo }: SendMailInput): Promise<boolean> {
+export async function sendMail({ to, subject, text, html, replyTo }: SendMailInput): Promise<boolean> {
   const t = getTransporter();
   if (!t) {
     console.warn("[mailer] SMTP not configured — skipping send. Set SMTP_HOST/SMTP_USER/SMTP_PASSWORD.");
@@ -38,6 +41,7 @@ export async function sendMail({ to, subject, text, replyTo }: SendMailInput): P
     to,
     subject,
     text,
+    html,
     replyTo,
   });
   return true;

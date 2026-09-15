@@ -12,6 +12,7 @@ import { createShiprocketOrder } from "@/lib/shiprocket";
 import { decrementStock, restoreStock } from "@/lib/booksRepo";
 import { getPaymentMethod } from "@/lib/razorpay";
 import { sendMail } from "@/lib/mailer";
+import { orderConfirmationEmail, newOrderAdminEmail, shipmentStatusEmail } from "@/lib/email/templates";
 import { site } from "@/content/site";
 
 /** Creates the Shiprocket order for an already-paid order. Shared by the
@@ -78,60 +79,12 @@ export async function fulfillPaidOrder(
   const shipmentOk = await createShipmentForOrder(order);
   const shipmentFailed = !shipmentOk;
 
-  const itemLines = order.items.map((i) => {
-    const extras = [i.signed && "Signed", i.personalisationMessage && `Personalised: "${i.personalisationMessage}"`]
-      .filter(Boolean)
-      .join(", ");
-    return `${i.quantity} x ${i.bookTitle} (${i.variantFormat})${extras ? ` [${extras}]` : ""} — ₹${(i.unitPricePaise / 100).toFixed(2)} each`;
-  });
-  const addressLines = [
-    order.address.line1,
-    order.address.line2,
-    `${order.address.city}, ${order.address.state} ${order.address.pincode}`,
-    order.address.country,
-  ].filter(Boolean);
-
-  const summary = [
-    `Order #${order.id} — payment ${razorpayPaymentId}`,
-    ...(oversold.length > 0
-      ? ["", `⚠ OVERSOLD — payment captured but insufficient stock for: ${oversold.join(", ")}. Resolve manually (refund or restock).`]
-      : []),
-    ...(shipmentFailed
-      ? ["", `⚠ SHIPMENT CREATION FAILED — payment is fine, but the Shiprocket order didn't get created. Retry from the order's admin page.`]
-      : []),
-    ``,
-    `Customer: ${order.address.name}`,
-    `Email: ${order.address.email}`,
-    `Phone: ${order.address.phone}`,
-    `Address: ${addressLines.join(", ")}`,
-    ``,
-    `Items:`,
-    ...itemLines,
-    ``,
-    `Subtotal: ₹${(order.subtotalPaise / 100).toFixed(2)}`,
-    `Shipping: ₹${(order.shippingPaise / 100).toFixed(2)}`,
-    `Total: ₹${(order.totalPaise / 100).toFixed(2)}`,
-  ].join("\n");
-
   const notifyTo = process.env.ORDER_NOTIFICATION_EMAIL || process.env.CONTACT_FORM_TO_EMAIL || site.email;
-  await sendMail({ to: notifyTo, subject: `[Order #${order.id}] New paid order`, text: summary });
+  const adminEmail = newOrderAdminEmail(order, razorpayPaymentId, { oversold, shipmentFailed });
+  await sendMail({ to: notifyTo, subject: adminEmail.subject, text: adminEmail.text, html: adminEmail.html });
 
-  const customerText = [
-    `Thank you for your order, ${order.address.name}!`,
-    ``,
-    `Here's what you ordered:`,
-    ...itemLines,
-    ``,
-    `Total paid: ₹${(order.totalPaise / 100).toFixed(2)}`,
-    ``,
-    `We'll ship to:`,
-    ...addressLines,
-    ``,
-    `You'll receive a separate update once your order is dispatched.`,
-    ``,
-    `— ${site.name}`,
-  ].join("\n");
-  await sendMail({ to: order.address.email, subject: `Your order #${order.id} is confirmed`, text: customerText });
+  const customerEmail = orderConfirmationEmail(order);
+  await sendMail({ to: order.address.email, subject: customerEmail.subject, text: customerEmail.text, html: customerEmail.html });
 }
 
 /** Cancels an order — if it was paid (and stock was therefore already
@@ -159,28 +112,6 @@ export async function cancelOrder(orderId: number): Promise<{ ok: boolean; error
  * transitions (guarded by the caller comparing previousStatus) — never on a
  * repeat webhook delivery of a status the order is already at. */
 export async function sendShipmentStatusEmail(order: OrderRecord, event: "shipped" | "delivered"): Promise<void> {
-  const trackingLine = order.trackingUrl ? `Track your order: ${order.trackingUrl}` : "";
-  const awbLine = order.awbCode ? `AWB: ${order.awbCode}${order.courierName ? ` (${order.courierName})` : ""}` : "";
-
-  const text =
-    event === "shipped"
-      ? [
-          `Good news, ${order.address.name} — your order #${order.id} has shipped!`,
-          ``,
-          awbLine,
-          trackingLine,
-          ``,
-          `— ${site.name}`,
-        ]
-      : [
-          `Your order #${order.id} has been delivered. We hope you enjoy it!`,
-          ``,
-          `— ${site.name}`,
-        ];
-
-  await sendMail({
-    to: order.address.email,
-    subject: event === "shipped" ? `Your order #${order.id} has shipped` : `Your order #${order.id} was delivered`,
-    text: text.filter(Boolean).join("\n"),
-  });
+  const email = shipmentStatusEmail(order, event);
+  await sendMail({ to: order.address.email, subject: email.subject, text: email.text, html: email.html });
 }
