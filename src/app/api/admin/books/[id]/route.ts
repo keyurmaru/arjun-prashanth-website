@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { bookInputSchema } from "@/lib/validation";
 import { getBookAdminById, updateBook, archiveBook } from "@/lib/booksRepo";
+import { notifyBookAvailable } from "@/lib/notifyMe";
 import { logAction } from "@/lib/auditLog";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -33,11 +34,19 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     );
   }
 
+  const before = await getBookAdminById(bookId);
+
   try {
     await updateBook(bookId, parsed.data);
   } catch (err) {
     const message = err instanceof Error && err.message.includes("Duplicate") ? "That slug is already in use." : "Could not update the book.";
     return NextResponse.json({ ok: false, error: message }, { status: 400 });
+  }
+
+  // Covers both "coming soon went live" and "back in stock" restock cases —
+  // never re-fires on a save that doesn't change status into PUBLISHED.
+  if (before && before.status !== "PUBLISHED" && parsed.data.status === "PUBLISHED") {
+    await notifyBookAvailable(bookId, parsed.data.title, parsed.data.slug);
   }
 
   await logAction(session, "book.update", "book", bookId, { title: parsed.data.title, status: parsed.data.status });
