@@ -14,6 +14,18 @@ export interface RateLimitOptions {
   windowMs?: number;
 }
 
+/** Comma-separated IPs in RATE_LIMIT_BYPASS_IPS (set via .htaccess) skip
+ * every rate limit entirely — for a known QA/testing source that needs to
+ * submit many test cases in a short window without tripping spam
+ * protection meant for the general public. Not for routine use. */
+export function isBypassedIp(ip: string): boolean {
+  const list = (process.env.RATE_LIMIT_BYPASS_IPS || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return list.includes(ip);
+}
+
 export function isRateLimited(key: string, options?: RateLimitOptions): boolean {
   const windowMs = options?.windowMs ?? DEFAULT_WINDOW_MS;
   const max = options?.max ?? DEFAULT_MAX_REQUESTS;

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getPool } from "@/lib/db";
-import { isRateLimited } from "@/lib/rateLimit";
+import { isRateLimited, isBypassedIp } from "@/lib/rateLimit";
 
 const schema = z.object({
   bookId: z.number().int().positive(),
@@ -10,7 +10,7 @@ const schema = z.object({
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-  if (isRateLimited(`notify-me:${ip}`)) {
+  if (!isBypassedIp(ip) && isRateLimited(`notify-me:${ip}`)) {
     return NextResponse.json({ ok: false, error: "Too many requests." }, { status: 429 });
   }
 

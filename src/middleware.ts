@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SESSION_COOKIE, verifySessionToken, hasAccess, ROLE_ACCESS, type AdminRole } from "@/lib/auth";
-import { isRateLimited } from "@/lib/rateLimit";
+import { isRateLimited, isBypassedIp } from "@/lib/rateLimit";
 
 // Maps a protected path prefix to the RBAC module it requires. Checked here
 // (server-side, before the request ever reaches a page or API route) so
@@ -58,7 +58,7 @@ export async function middleware(req: NextRequest) {
   if (pathname.startsWith("/api/") && !pathname.startsWith("/api/admin")) {
     if (!pathname.startsWith("/api/webhooks")) {
       const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-      if (isRateLimited(`api-backstop:${ip}`, { max: 60, windowMs: 60 * 1000 })) {
+      if (!isBypassedIp(ip) && isRateLimited(`api-backstop:${ip}`, { max: 60, windowMs: 60 * 1000 })) {
         return NextResponse.json({ ok: false, error: "Too many requests." }, { status: 429 });
       }
     }

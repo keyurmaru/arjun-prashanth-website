@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { screenwritingFormSchema } from "@/lib/validation";
 import { looksLikeSpam, verifyTurnstile } from "@/lib/spam";
-import { isRateLimited } from "@/lib/rateLimit";
+import { isRateLimited, isBypassedIp } from "@/lib/rateLimit";
 import { sendMail } from "@/lib/mailer";
 import { site } from "@/content/site";
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
 
-  if (isRateLimited(`screenwriting:${ip}`)) {
+  if (!isBypassedIp(ip) && isRateLimited(`screenwriting:${ip}`)) {
     return NextResponse.json({ ok: false, error: "Too many requests. Please try again later." }, { status: 429 });
   }
 

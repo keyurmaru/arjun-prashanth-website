@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkoutSchema } from "@/lib/validation";
-import { isRateLimited } from "@/lib/rateLimit";
+import { isRateLimited, isBypassedIp } from "@/lib/rateLimit";
 import { getPurchasableVariant } from "@/lib/booksRepo";
 import { createRazorpayOrder } from "@/lib/razorpay";
 import { createOrder, type ResolvedOrderItem } from "@/lib/orders";
@@ -11,7 +11,7 @@ const SHIPPING_PAISE = 6000;
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-  if (isRateLimited(`order-create:${ip}`)) {
+  if (!isBypassedIp(ip) && isRateLimited(`order-create:${ip}`)) {
     return NextResponse.json({ ok: false, error: "Too many requests. Please try again later." }, { status: 429 });
   }
 
