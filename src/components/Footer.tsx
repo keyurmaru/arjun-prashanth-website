@@ -25,6 +25,7 @@ const columns = [
     links: [
       { label: "About", href: "/about" },
       { label: "Contact", href: "/contact" },
+      { label: "My Account", href: "/account/orders" },
     ],
   },
 ];

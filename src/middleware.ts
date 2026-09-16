@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SESSION_COOKIE, verifySessionToken, hasAccess, ROLE_ACCESS, type AdminRole } from "@/lib/auth";
+import { CUSTOMER_SESSION_COOKIE, verifyCustomerSessionToken } from "@/lib/customerAuth";
 import { isRateLimited, isBypassedIp } from "@/lib/rateLimit";
 
 // Maps a protected path prefix to the RBAC module it requires. Checked here
@@ -65,6 +66,23 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // Customer account pages — a completely separate, lower-privilege
+  // session (apr_customer_session, see customerAuth.ts) from the admin
+  // one above. /account/login itself must stay reachable without a
+  // session; everything else under /account requires one.
+  if (pathname.startsWith("/account")) {
+    if (pathname === "/account/login") return NextResponse.next();
+
+    const token = req.cookies.get(CUSTOMER_SESSION_COOKIE)?.value;
+    const session = token ? await verifyCustomerSessionToken(token) : null;
+    if (!session) {
+      const loginUrl = new URL("/account/login", req.url);
+      loginUrl.searchParams.set("next", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+    return NextResponse.next();
+  }
+
   // Everything below only ever runs for /admin/* and /api/admin/*.
   // verify-2fa runs with only the short-lived pending-2FA token from
   // login, not a real session cookie — it must bypass the session check
@@ -103,5 +121,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/:path*"],
+  matcher: ["/admin/:path*", "/api/:path*", "/account/:path*"],
 };

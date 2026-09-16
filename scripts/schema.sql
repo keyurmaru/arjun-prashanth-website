@@ -159,8 +159,21 @@ CREATE TABLE IF NOT EXISTS media (
   INDEX idx_media_category (category)
 );
 
+-- Customer accounts: auto-created the moment an order is paid, with a
+-- random password emailed directly to the customer. Lets them log in to
+-- see order status and order history without a separate signup step.
+CREATE TABLE IF NOT EXISTS customers (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(200) NOT NULL UNIQUE,
+  password_hash VARCHAR(200) NOT NULL,
+  name VARCHAR(120) NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS orders (
   id INT AUTO_INCREMENT PRIMARY KEY,
+  customer_id INT NULL,
   razorpay_order_id VARCHAR(64) NOT NULL UNIQUE,
   razorpay_payment_id VARCHAR(64) NULL,
   -- e.g. "card", "upi", "netbanking", "wallet", "emi" — from Razorpay.
@@ -215,7 +228,8 @@ CREATE TABLE IF NOT EXISTS orders (
   admin_notes TEXT NULL,
 
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS order_items (

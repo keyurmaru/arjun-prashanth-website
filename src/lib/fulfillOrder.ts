@@ -3,6 +3,7 @@ import {
   getOrderByRazorpayOrderId,
   markOrderPaid,
   recordPaymentMethod,
+  linkOrderToCustomer,
   setOrderCancelled,
   recordShipmentCreated,
   markShipmentFailed,
@@ -10,9 +11,10 @@ import {
 } from "@/lib/orders";
 import { createShiprocketOrder } from "@/lib/shiprocket";
 import { decrementStock, restoreStock } from "@/lib/booksRepo";
+import { findOrCreateCustomer } from "@/lib/customersRepo";
 import { getPaymentMethod } from "@/lib/razorpay";
 import { sendMail } from "@/lib/mailer";
-import { orderConfirmationEmail, newOrderAdminEmail, shipmentStatusEmail } from "@/lib/email/templates";
+import { orderConfirmationEmail, newOrderAdminEmail, shipmentStatusEmail, accountCreatedEmail } from "@/lib/email/templates";
 import { site } from "@/content/site";
 
 /** Creates the Shiprocket order for an already-paid order. Shared by the
@@ -57,6 +59,18 @@ export async function fulfillPaidOrder(
 
   const order = await getOrderByRazorpayOrderId(razorpayOrderId);
   if (!order) return;
+
+  // Auto-creates a customer account (find-or-create, keyed on the
+  // checkout email) only now that the order is genuinely paid — never for
+  // an abandoned/unpaid cart. A brand-new account gets its password
+  // emailed once; an existing customer placing another order just gets
+  // this order linked to their existing account, no new email.
+  const { customer, isNew, plainPassword } = await findOrCreateCustomer(order.address.email, order.address.name);
+  await linkOrderToCustomer(razorpayOrderId, customer.id);
+  if (isNew && plainPassword) {
+    const accountEmail = accountCreatedEmail(customer.email, plainPassword);
+    await sendMail({ to: customer.email, subject: accountEmail.subject, text: accountEmail.text, html: accountEmail.html });
+  }
 
   const oversold: string[] = [];
   for (const item of order.items) {

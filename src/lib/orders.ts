@@ -44,6 +44,7 @@ export interface ResolvedOrderItem {
 
 export interface OrderRecord {
   id: number;
+  customerId: number | null;
   razorpayOrderId: string;
   razorpayPaymentId: string | null;
   paymentMethod: string | null;
@@ -336,6 +337,26 @@ export async function updateOrderAdminFields(
   await pool.execute(`UPDATE orders SET ${columns.join(", ")} WHERE id = ?`, [...values, id]);
 }
 
+/** Links a paid order to the (possibly just-created) customer account for
+ * its email — called from fulfillOrder.ts once payment is confirmed.
+ * Idempotent to call again (e.g. on a duplicate webhook). */
+export async function linkOrderToCustomer(razorpayOrderId: string, customerId: number): Promise<void> {
+  const pool = getPool();
+  await pool.execute(`UPDATE orders SET customer_id = ? WHERE razorpay_order_id = ?`, [customerId, razorpayOrderId]);
+}
+
+/** Every order placed under this customer's account — the order-history
+ * page's data source. Newest first, no pagination (a personal customer's
+ * order count is small; add it later if that stops being true). */
+export async function listOrdersForCustomer(customerId: number): Promise<OrderRecord[]> {
+  const pool = getPool();
+  const [rows] = await pool.execute<RowDataPacket[]>(
+    `SELECT * FROM orders WHERE customer_id = ? ORDER BY created_at DESC`,
+    [customerId],
+  );
+  return Promise.all(rows.map((r) => hydrateOrder(r)));
+}
+
 export async function getOrderByRazorpayOrderId(razorpayOrderId: string): Promise<OrderRecord | null> {
   const pool = getPool();
   const [orderRows] = await pool.execute<RowDataPacket[]>(`SELECT * FROM orders WHERE razorpay_order_id = ?`, [
@@ -445,6 +466,7 @@ async function hydrateOrder(row: RowDataPacket): Promise<OrderRecord> {
 
   return {
     id: row.id,
+    customerId: row.customer_id,
     razorpayOrderId: row.razorpay_order_id,
     razorpayPaymentId: row.razorpay_payment_id,
     paymentMethod: row.payment_method,

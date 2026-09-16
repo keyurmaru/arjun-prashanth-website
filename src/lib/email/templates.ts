@@ -316,6 +316,43 @@ export function shipmentStatusEmail(order: OrderRecord, event: "shipped" | "deli
   };
 }
 
+// ---- Customer account ----
+
+/** Sent once, the moment an order-triggered customer account is first
+ * created (fulfillOrder.ts) — never re-sent for a repeat order from an
+ * existing customer, and the password is never shown anywhere else. */
+export function accountCreatedEmail(email: string, password: string): EmailContent {
+  const loginUrl = `${siteUrl}/account/login`;
+  const bodyHtml = `
+    <p style="margin:0 0 20px; font-family:Arial,Helvetica,sans-serif; font-size:14px; line-height:1.6; color:#2a2a2a;">
+      We've created an account for you so you can check your order status and see your order history any time.
+    </p>
+    ${emailRowsTable([emailRow("Email", email), emailRow("Password", password)].join(""))}
+    <p style="margin:16px 0 0; font-family:Arial,Helvetica,sans-serif; font-size:12px; line-height:1.6; color:#6b6b6b;">
+      For your security, consider changing this password after you log in.
+    </p>
+    ${emailButton("Log in to your account", loginUrl)}`;
+
+  const text = [
+    `We've created an account for you so you can check your order status and see your order history any time.`,
+    ``,
+    `Email: ${email}`,
+    `Password: ${password}`,
+    ``,
+    `For your security, consider changing this password after you log in.`,
+    ``,
+    loginUrl,
+    ``,
+    `— ${site.name}`,
+  ].join("\n");
+
+  return {
+    subject: "Your account has been created",
+    html: renderEmail({ eyebrow: "Account Created", heading: "Welcome", bodyHtml }),
+    text,
+  };
+}
+
 // ---- Notify Me ----
 
 export function bookAvailableEmail(bookTitle: string, bookUrl: string): EmailContent {
