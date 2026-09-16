@@ -4,10 +4,7 @@ import { isRateLimited, isBypassedIp } from "@/lib/rateLimit";
 import { getPurchasableVariant } from "@/lib/booksRepo";
 import { createRazorpayOrder } from "@/lib/razorpay";
 import { createOrder, type ResolvedOrderItem } from "@/lib/orders";
-
-// Flat domestic shipping fee (India only, per the published Shipping &
-// Delivery policy) — one flat charge per order, not per item.
-const SHIPPING_PAISE = 6000;
+import { computeShippingPaise } from "@/lib/shippingQuote";
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
@@ -74,7 +71,9 @@ export async function POST(req: NextRequest) {
   }
 
   const subtotalPaise = resolvedItems.reduce((sum, i) => sum + i.unitPricePaise * i.quantity, 0);
-  const totalPaise = subtotalPaise + SHIPPING_PAISE;
+  const totalWeightKg = resolvedItems.reduce((sum, i) => sum + (i.weightGrams * i.quantity) / 1000, 0);
+  const { shippingPaise } = await computeShippingPaise(data.pincode, Math.max(totalWeightKg, 0.05));
+  const totalPaise = subtotalPaise + shippingPaise;
 
   let razorpayOrder;
   try {
@@ -100,7 +99,7 @@ export async function POST(req: NextRequest) {
       },
       items: resolvedItems,
       subtotalPaise,
-      shippingPaise: SHIPPING_PAISE,
+      shippingPaise,
       totalPaise,
     });
   } catch (err) {

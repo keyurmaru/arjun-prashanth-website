@@ -12,7 +12,7 @@ declare global {
   }
 }
 
-const SHIPPING_INR = 60;
+const FLAT_SHIPPING_INR = 60;
 
 export default function CheckoutPageClient() {
   const router = useRouter();
@@ -20,6 +20,29 @@ export default function CheckoutPageClient() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [scriptReady, setScriptReady] = useState(false);
+  const [shippingINR, setShippingINR] = useState(FLAT_SHIPPING_INR);
+  const [shippingQuoteState, setShippingQuoteState] = useState<"idle" | "loading" | "live" | "fallback">("idle");
+
+  async function fetchShippingQuote(pincode: string) {
+    if (!/^[1-9][0-9]{5}$/.test(pincode)) return;
+    setShippingQuoteState("loading");
+    try {
+      const res = await fetch("/api/shipping/quote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pincode, items: lines }),
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setShippingINR(Math.round(data.shippingPaise / 100));
+        setShippingQuoteState(data.live ? "live" : "fallback");
+      } else {
+        setShippingQuoteState("fallback");
+      }
+    } catch {
+      setShippingQuoteState("fallback");
+    }
+  }
 
   if (lines.length === 0) {
     return (
@@ -115,7 +138,7 @@ export default function CheckoutPageClient() {
     }
   }
 
-  const totalINR = subtotalINR + SHIPPING_INR;
+  const totalINR = subtotalINR + shippingINR;
 
   return (
     <>
@@ -133,7 +156,14 @@ export default function CheckoutPageClient() {
           <div className="grid sm:grid-cols-3 gap-6">
             <Field label="City *" name="city" required autoComplete="address-level2" />
             <Field label="State *" name="state" required autoComplete="address-level1" />
-            <Field label="PIN Code *" name="pincode" required autoComplete="postal-code" pattern="[1-9][0-9]{5}" />
+            <Field
+              label="PIN Code *"
+              name="pincode"
+              required
+              autoComplete="postal-code"
+              pattern="[1-9][0-9]{5}"
+              onBlur={(e) => fetchShippingQuote(e.target.value)}
+            />
           </div>
           <p className="font-inter text-[12px] text-near-black/50">We currently ship within India only.</p>
 
@@ -161,9 +191,15 @@ export default function CheckoutPageClient() {
             <span>₹{subtotalINR}</span>
           </div>
           <div className="flex justify-between font-inter text-[13px] text-near-black/70 mt-1">
-            <span>Shipping</span>
-            <span>₹{SHIPPING_INR}</span>
+            <span>
+              Shipping
+              {shippingQuoteState === "loading" && <span className="text-near-black/40"> (calculating…)</span>}
+            </span>
+            <span>₹{shippingINR}</span>
           </div>
+          {shippingQuoteState === "idle" && (
+            <p className="font-inter text-[11px] text-near-black/40 mt-1">Enter your PIN code above for exact shipping.</p>
+          )}
           <div className="flex justify-between font-inter text-[15px] text-near-black font-medium mt-3 pt-3 border-t border-near-black/10">
             <span>Total</span>
             <span>₹{totalINR}</span>
@@ -189,6 +225,7 @@ function Field({
   required,
   autoComplete,
   pattern,
+  onBlur,
 }: {
   label: string;
   name: string;
@@ -196,6 +233,7 @@ function Field({
   required?: boolean;
   autoComplete?: string;
   pattern?: string;
+  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
 }) {
   return (
     <div>
@@ -209,6 +247,7 @@ function Field({
         required={required}
         autoComplete={autoComplete}
         pattern={pattern}
+        onBlur={onBlur}
         className="w-full bg-transparent border border-near-black/20 focus:border-bronze px-4 py-3 font-inter text-[14px] text-near-black outline-none transition-colors"
       />
     </div>

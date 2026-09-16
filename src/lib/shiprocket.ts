@@ -139,6 +139,50 @@ export async function checkServiceability(
   }));
 }
 
+let cachedPickupPincode: string | null = null;
+
+/** Looks up the actual pincode of the registered pickup address matching
+ * SHIPROCKET_PICKUP_LOCATION — checkServiceability needs a real pincode,
+ * not the location's nickname. Fetched from Shiprocket rather than
+ * hardcoded so it stays correct if the pickup address ever changes.
+ * Cached in-memory for the life of the process (same accepted
+ * process-local limitation as the auth token cache above). */
+async function getPickupPincode(): Promise<string> {
+  if (cachedPickupPincode) return cachedPickupPincode;
+
+  const locationName = process.env.SHIPROCKET_PICKUP_LOCATION;
+  if (!locationName) throw new Error("SHIPROCKET_PICKUP_LOCATION is not configured.");
+
+  const data = (await authedFetch("/settings/company/pickup")) as {
+    data?: { shipping_address?: { pickup_location: string; pin_code: string }[] };
+  };
+  const match = data.data?.shipping_address?.find((a) => a.pickup_location === locationName);
+  if (!match) throw new Error(`No Shiprocket pickup address found matching "${locationName}".`);
+
+  cachedPickupPincode = match.pin_code;
+  return cachedPickupPincode;
+}
+
+export interface ShippingQuote {
+  ratePaise: number;
+  courierName: string;
+  etd: string;
+}
+
+/** The cheapest available courier for this delivery pincode/weight, in
+ * paise — what checkout actually charges. Throws if Shiprocket can't be
+ * reached or the pincode isn't serviceable; callers decide the fallback
+ * (see the flat-rate fallback in orders/create and the shipping-quote
+ * route). */
+export async function getCheapestShippingQuote(deliveryPincode: string, weightKg: number): Promise<ShippingQuote> {
+  const pickupPincode = await getPickupPincode();
+  const options = await checkServiceability(pickupPincode, deliveryPincode, weightKg);
+  if (options.length === 0) throw new Error(`No courier serviceable for pincode ${deliveryPincode}.`);
+
+  const cheapest = options.reduce((min, o) => (o.rate < min.rate ? o : min));
+  return { ratePaise: Math.round(cheapest.rate * 100), courierName: cheapest.courierName, etd: cheapest.etd };
+}
+
 /** Assigns an AWB — the courier's own tracking number — to a shipment.
  * Passing no courierId lets Shiprocket pick its recommended courier. */
 export async function assignAWB(shipmentId: string, courierId?: string) {
