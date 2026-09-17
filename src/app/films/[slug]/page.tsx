@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import Reveal from "@/components/Reveal";
 import Breadcrumbs from "@/components/Breadcrumbs";
@@ -157,11 +156,23 @@ export default async function FilmDetailPage({ params }: { params: Promise<{ slu
           <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-16 lg:py-20">
             <Reveal>
               <p className="font-inter text-[11px] tracking-[0.16em] uppercase text-bronze mb-8">Gallery</p>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Masonry via CSS columns, not a fixed-aspect grid — the
+                  supplied stills are a mix of portrait/landscape/square, and
+                  cropping every one into the same box (the previous
+                  aspect-[4/3] + object-cover) distorted or awkwardly
+                  cropped most of them. Each image keeps its own natural
+                  proportions here instead. */}
+              <div className="columns-2 lg:columns-3 gap-6 [column-fill:balance]">
                 {film.gallery.map((img) => (
-                  <div key={img.id}>
-                    <div className="relative aspect-[4/3] w-full bg-dark-800 border border-dark-800">
-                      <Image src={img.imageUrl} alt={img.caption || `${film.title} — still`} fill sizes="(min-width: 1024px) 33vw, 90vw" className="object-cover" />
+                  <div key={img.id} className="mb-6 break-inside-avoid">
+                    <div className="relative w-full bg-dark-800 border border-dark-800">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={img.imageUrl}
+                        alt={img.caption || `${film.title} — still`}
+                        loading="lazy"
+                        className="w-full h-auto block"
+                      />
                     </div>
                     {img.caption && <p className="font-inter text-[12px] text-muted mt-2">{img.caption}</p>}
                   </div>
