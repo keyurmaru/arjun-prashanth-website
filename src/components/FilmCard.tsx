@@ -4,15 +4,16 @@ import CardMedia from "./CardMedia";
 
 export default function FilmCard({ film }: { film: FilmRecord }) {
   return (
-    <Link href={`/films/${film.slug}`} className="group block">
-      <div className="relative aspect-[2/3] w-full overflow-hidden bg-dark-800 border border-dark-800 group-hover:border-bronze/50 transition-colors duration-300">
+    <Link href={`/films/${film.slug}`} className="group block mb-8 lg:mb-10 break-inside-avoid">
+      <div className="relative w-full overflow-hidden bg-dark-800 border border-dark-800 group-hover:border-bronze/50 transition-colors duration-300">
         {film.posterUrl ? (
-          <CardMedia src={film.posterUrl} alt={`${film.title} — poster`} sizes="(min-width: 1024px) 280px, 45vw" />
+          <CardMedia src={film.posterUrl} alt={`${film.title} — poster`} sizes="(min-width: 1024px) 280px, 45vw" fill={false} />
         ) : (
           // No verified poster exists yet for this credit — a typographic
           // placeholder is used instead of a stock image, per the
-          // no-invented-imagery rule.
-          <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
+          // no-invented-imagery rule. No real image to derive proportions
+          // from, so this one keeps a fixed aspect ratio.
+          <div className="aspect-[2/3] w-full flex flex-col items-center justify-center px-6 text-center">
             <p className="font-inter text-[9px] tracking-[0.2em] uppercase text-muted/70 mb-4">Poster Coming Soon</p>
             <p className="font-cormorant text-2xl text-ivory-100 leading-tight">{film.title}</p>
             <span className="mt-5 h-px w-8 bg-bronze/60" />
